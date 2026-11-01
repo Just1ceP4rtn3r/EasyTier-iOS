@@ -44,7 +44,7 @@ struct BoolFlag: Identifiable {
     let help: LocalizedStringKey?
 }
 
-nonisolated struct NetworkProfile: Identifiable, Equatable {
+struct NetworkProfile: Identifiable, Equatable {
     struct PeerSetting: Identifiable, Equatable {
         var id = UUID()
         var uri: String = ""
@@ -591,7 +591,7 @@ nonisolated struct NetworkProfile: Identifiable, Equatable {
     ]
 }
 
-nonisolated struct AlwaysEqual<T>: Equatable {
+struct AlwaysEqual<T>: Equatable {
     var value: T
     
     static func == (lhs: AlwaysEqual<T>, rhs: AlwaysEqual<T>) -> Bool {

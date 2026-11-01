@@ -19,19 +19,18 @@ struct WebManagementEditView: View {
     var body: some View {
         Form {
             Section {
-                LabeledContent("web_management.server.placeholder") {
+                CompatibleLabeledContent("web_management.server.placeholder") {
                     TextField(
                         "tcp://et-web.console.easytier.net:22020/your_token",
                         text: $server,
-                        prompt: Text("tcp://localhost:22020/your_token"),
-                        axis: .vertical
+                        prompt: Text("tcp://localhost:22020/your_token")
                     )
                     .labelsHidden()
                     .multilineTextAlignment(.trailing)
                     .adaptiveNoTextInputAutocapitalization()
-                    .autocorrectionDisabled()
+                    .disableAutocorrection(true)
                 }
-                LabeledContent("hostname") {
+                CompatibleLabeledContent("hostname") {
                     TextField(
                         "common_text.default",
                         text: $hostname,
@@ -48,7 +47,7 @@ struct WebManagementEditView: View {
                 Text("web_management.secure_mode_help")
             }
             Section("web_management.machine_id") {
-                LabeledContent {
+                CompatibleLabeledContent {
                     Button(action: copyMachineID) {
                         Image(systemName: "doc.on.doc")
                     }
@@ -62,7 +61,7 @@ struct WebManagementEditView: View {
                 }
             }
         }
-        .formStyle(.grouped)
+
         .alert("web_management.machine_id.reset_confirm_title", isPresented: $showResetMachineIDAlert) {
             Button("common.cancel", role: .cancel) {}
             Button("reset", role: .destructive) {

@@ -47,10 +47,9 @@ struct StatusView<Manager: NetworkExtensionManagerProtocol>: View {
     var body: some View {
         Group {
             if sizeClass == .regular {
-                ViewThatFits(in: .horizontal) {
-                    doubleComlum
-                    singleColumn
-                }
+                if #available(iOS 16.0, macOS 13.0, *) {
+                    ViewThatFits(in: .horizontal) { doubleComlum; singleColumn }
+                } else { singleColumn }
             } else {
                 singleColumn
             }
@@ -142,7 +141,7 @@ struct StatusView<Manager: NetworkExtensionManagerProtocol>: View {
             info
 #endif
         }
-        .formStyle(.grouped)
+
     }
     
     var doubleComlum: some View {
@@ -167,14 +166,14 @@ struct StatusView<Manager: NetworkExtensionManagerProtocol>: View {
                 }
             }
             .frame(minWidth: columnMinWidth, maxWidth: columnMaxWidth)
-            .formStyle(.grouped)
+
             Form {
                 Section("event_log") {
                     TimelineLogPanel(events: status?.events ?? [])
                 }
             }
             .frame(minWidth: columnMinWidth)
-            .formStyle(.grouped)
+
         }
     }
     
@@ -611,7 +610,7 @@ struct StatItem: View {
                 Label(label, systemImage: icon)
                     .font(.caption)
                     .foregroundStyle(.secondary)
-                    .labelIconToTitleSpacing(2)
+
             } else {
                 HStack(spacing: 4) {
                     Image(systemName: icon)

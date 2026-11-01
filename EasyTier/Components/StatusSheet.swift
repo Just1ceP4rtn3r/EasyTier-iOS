@@ -7,7 +7,7 @@ struct NetworkSettingsSheet: View {
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
-        NavigationStack {
+        CompatibleNavigationStack {
             Form {
                 if let settings {
                     if let ipv4 = settings.ipv4 {
@@ -64,7 +64,7 @@ struct NetworkSettingsSheet: View {
 
                     if let mtu = settings.mtu {
                         Section("mtu") {
-                            LabeledContent("mtu", value: String(mtu))
+                            CompatibleLabeledContent("mtu", value: String(mtu))
                         }
                     }
                 } else {
@@ -77,7 +77,7 @@ struct NetworkSettingsSheet: View {
             .textSelection(.enabled)
             .navigationTitle("network_settings")
             .adaptiveNavigationBarTitleInline()
-            .formStyle(.grouped)
+
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button {
@@ -91,7 +91,7 @@ struct NetworkSettingsSheet: View {
     }
 
     private func labeledLines(_ label: LocalizedStringKey, values: [String]) -> some View {
-        LabeledContent(label) {
+        CompatibleLabeledContent(label) {
             Text(values.isEmpty ? String(localized: "not_available") : values.joined(separator: "\n"))
         }
     }
@@ -163,41 +163,41 @@ struct PeerConnDetailSheet: View {
     }
 
     var body: some View {
-        NavigationStack {
+        CompatibleNavigationStack {
             Form {
                 if let pair {
                     Section("peer") {
-                        LabeledContent("hostname", value: pair.route.hostname)
-                        LabeledContent("peer_id", value: String(pair.route.peerId))
+                        CompatibleLabeledContent("hostname", value: pair.route.hostname)
+                        CompatibleLabeledContent("peer_id", value: String(pair.route.peerId))
                         if let ipv4 = pair.route.ipv4Addr {
-                            LabeledContent("ipv4_addr", value: ipv4.description)
+                            CompatibleLabeledContent("ipv4_addr", value: ipv4.description)
                         }
                         if let ipv6 = pair.route.ipv6Addr {
-                            LabeledContent("ipv6_addr", value: ipv6.description)
+                            CompatibleLabeledContent("ipv6_addr", value: ipv6.description)
                         }
-                        LabeledContent("inst_id", value: String(pair.route.instId))
-                        LabeledContent("version", value: String(pair.route.version))
-                        LabeledContent("next_hop_peer_id", value: String(pair.route.nextHopPeerId))
-                        LabeledContent("cost", value: String(pair.route.cost))
-                        LabeledContent("path_latency", value: latencyValueString(pair.route.pathLatency))
+                        CompatibleLabeledContent("inst_id", value: String(pair.route.instId))
+                        CompatibleLabeledContent("version", value: String(pair.route.version))
+                        CompatibleLabeledContent("next_hop_peer_id", value: String(pair.route.nextHopPeerId))
+                        CompatibleLabeledContent("cost", value: String(pair.route.cost))
+                        CompatibleLabeledContent("path_latency", value: latencyValueString(pair.route.pathLatency))
                         if let nextHopLatencyFirst = pair.route.nextHopPeerIdLatencyFirst {
-                            LabeledContent("next_hop_peer_id_latency_first", value: String(nextHopLatencyFirst))
+                            CompatibleLabeledContent("next_hop_peer_id_latency_first", value: String(nextHopLatencyFirst))
                         }
                         if let costLatencyFirst = pair.route.costLatencyFirst {
-                            LabeledContent("cost_latency_first", value: String(costLatencyFirst))
+                            CompatibleLabeledContent("cost_latency_first", value: String(costLatencyFirst))
                         }
                         if let pathLatencyLatencyFirst = pair.route.pathLatencyLatencyFirst {
-                            LabeledContent("path_latency_latency_first", value: latencyValueString(pathLatencyLatencyFirst))
+                            CompatibleLabeledContent("path_latency_latency_first", value: latencyValueString(pathLatencyLatencyFirst))
                         }
                         if let featureFlags = pair.route.featureFlag {
-                            LabeledContent("feature_flag", value: featureFlagString(featureFlags))
+                            CompatibleLabeledContent("feature_flag", value: featureFlagString(featureFlags))
                         }
                         if let peerInfo = pair.peer {
                             if let defaultConnId = peerInfo.defaultConnId {
-                                LabeledContent("default_conn_id", value: uuidString(defaultConnId))
+                                CompatibleLabeledContent("default_conn_id", value: uuidString(defaultConnId))
                             }
                             if !peerInfo.directlyConnectedConns.isEmpty {
-                                LabeledContent(
+                                CompatibleLabeledContent(
                                     "directly_connected_conns",
                                     value: peerInfo.directlyConnectedConns.map(uuidString).sorted().joined(separator: "\n")
                                 )
@@ -221,29 +221,29 @@ struct PeerConnDetailSheet: View {
                     } else {
                         ForEach(conns, id: \.connId) { conn in
                             Section("connection_\(conn.connId)") {
-                                LabeledContent("peer_id", value: String(conn.peerId))
-                                LabeledContent("role", value: conn.isClient ? "Client" : "Server")
-                                LabeledContent("loss_rate", value: percentString(conn.lossRate))
-                                LabeledContent("closed", value: triState(conn.isClosed))
+                                CompatibleLabeledContent("peer_id", value: String(conn.peerId))
+                                CompatibleLabeledContent("role", value: conn.isClient ? "Client" : "Server")
+                                CompatibleLabeledContent("loss_rate", value: percentString(conn.lossRate))
+                                CompatibleLabeledContent("closed", value: triState(conn.isClosed))
 
-                                LabeledContent("features", value: conn.features.isEmpty ? "None" : conn.features.joined(separator: ", "))
+                                CompatibleLabeledContent("features", value: conn.features.isEmpty ? "None" : conn.features.joined(separator: ", "))
 
                                 if let tunnel = conn.tunnel {
-                                    LabeledContent("tunnel_type", value: tunnel.tunnelType.uppercased())
+                                    CompatibleLabeledContent("tunnel_type", value: tunnel.tunnelType.uppercased())
                                     if let localAddr = tunnel.localAddr {
-                                        LabeledContent("local_addr", value: localAddr.url)
+                                        CompatibleLabeledContent("local_addr", value: localAddr.url)
                                     }
                                     if let remoteAddr = tunnel.remoteAddr {
-                                        LabeledContent("remote_addr", value: remoteAddr.url)
+                                        CompatibleLabeledContent("remote_addr", value: remoteAddr.url)
                                     }
                                 }
 
                                 if let stats = conn.stats {
-                                    LabeledContent("rx_bytes", value: formatBytes(stats.rxBytes))
-                                    LabeledContent("tx_bytes", value: formatBytes(stats.txBytes))
-                                    LabeledContent("rx_packets", value: String(stats.rxPackets))
-                                    LabeledContent("tx_packets", value: String(stats.txPackets))
-                                    LabeledContent("latency", value: latencyString(stats.latencyUs))
+                                    CompatibleLabeledContent("rx_bytes", value: formatBytes(stats.rxBytes))
+                                    CompatibleLabeledContent("tx_bytes", value: formatBytes(stats.txBytes))
+                                    CompatibleLabeledContent("rx_packets", value: String(stats.rxPackets))
+                                    CompatibleLabeledContent("tx_packets", value: String(stats.txPackets))
+                                    CompatibleLabeledContent("latency", value: latencyString(stats.latencyUs))
                                 }
                             }
                         }
@@ -258,7 +258,7 @@ struct PeerConnDetailSheet: View {
             .textSelection(.enabled)
             .navigationTitle("peer_details")
             .adaptiveNavigationBarTitleInline()
-            .formStyle(.grouped)
+
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button {
@@ -318,17 +318,17 @@ struct NodeInfoSheet: View {
     }
     
     var body: some View {
-        NavigationStack {
+        CompatibleNavigationStack {
             Form {
                 if let nodeInfo {
                     Section("general") {
-                        LabeledContent("hostname", value: nodeInfo.hostname)
+                        CompatibleLabeledContent("hostname", value: nodeInfo.hostname)
                         if let peerID = nodeInfo.peerID {
-                            LabeledContent("peer_id", value: String(peerID))
+                            CompatibleLabeledContent("peer_id", value: String(peerID))
                         }
-                        LabeledContent("version", value: nodeInfo.version)
+                        CompatibleLabeledContent("version", value: nodeInfo.version)
                         if let virtualIPv4 = nodeInfo.virtualIPv4 {
-                            LabeledContent("virtual_ipv4", value: virtualIPv4.description)
+                            CompatibleLabeledContent("virtual_ipv4", value: virtualIPv4.description)
                         }
                     }
                 } else {
@@ -340,7 +340,7 @@ struct NodeInfoSheet: View {
             .textSelection(.enabled)
             .navigationTitle("node_information")
             .adaptiveNavigationBarTitleInline()
-            .formStyle(.grouped)
+
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button {
@@ -363,12 +363,12 @@ struct IPInfoSheet: View {
     }
     
     var body: some View {
-        NavigationStack {
+        CompatibleNavigationStack {
             Form {
                 if let nodeInfo {
                     if let virtualIPv4 = nodeInfo.virtualIPv4 {
                         Section("general") {
-                            LabeledContent("virtual_ipv4", value: virtualIPv4.description)
+                            CompatibleLabeledContent("virtual_ipv4", value: virtualIPv4.description)
                         }
                     }
                     
@@ -376,10 +376,10 @@ struct IPInfoSheet: View {
                         if ips.publicIPv4 != nil || ips.publicIPv6 != nil {
                             Section("ip_information") {
                                 if let publicIPv4 = ips.publicIPv4 {
-                                    LabeledContent("public_ipv4", value: publicIPv4.description)
+                                    CompatibleLabeledContent("public_ipv4", value: publicIPv4.description)
                                 }
                                 if let publicIPv6 = ips.publicIPv6 {
-                                    LabeledContent("public_ipv6", value: publicIPv6.description)
+                                    CompatibleLabeledContent("public_ipv6", value: publicIPv6.description)
                                 }
                             }
                         }
@@ -415,7 +415,7 @@ struct IPInfoSheet: View {
             .textSelection(.enabled)
             .navigationTitle("ip_information")
             .adaptiveNavigationBarTitleInline()
-            .formStyle(.grouped)
+
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button {
@@ -438,25 +438,25 @@ struct StunInfoSheet: View {
     }
     
     var body: some View {
-        NavigationStack {
+        CompatibleNavigationStack {
             Form {
                 if let stunInfo {
                     Section("nat_types") {
-                        LabeledContent("udp_nat_type") {
+                        CompatibleLabeledContent("udp_nat_type") {
                             Text(stunInfo.udpNATType.description)
                         }
-                        LabeledContent("tcp_nat_type") {
+                        CompatibleLabeledContent("tcp_nat_type") {
                             Text(stunInfo.tcpNATType.description)
                         }
                     }
                     
                     Section("details") {
-                        LabeledContent("last_update", value: formatDate(stunInfo.lastUpdateTime))
+                        CompatibleLabeledContent("last_update", value: formatDate(stunInfo.lastUpdateTime))
                         if let minPort = stunInfo.minPort {
-                            LabeledContent("min_port", value: String(minPort))
+                            CompatibleLabeledContent("min_port", value: String(minPort))
                         }
                         if let maxPort = stunInfo.maxPort {
-                            LabeledContent("max_port", value: String(maxPort))
+                            CompatibleLabeledContent("max_port", value: String(maxPort))
                         }
                     }
                     
@@ -477,7 +477,7 @@ struct StunInfoSheet: View {
             .navigationTitle("stun_information")
             .adaptiveNavigationBarTitleInline()
             .textSelection(.enabled)
-            .formStyle(.grouped)
+
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button {

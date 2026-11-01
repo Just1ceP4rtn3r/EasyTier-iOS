@@ -1,8 +1,8 @@
 import SwiftUI
 
 #if os(iOS)
-    let ToolbarLeading = ToolbarItemPlacement.topBarLeading
-    let ToolbarTrailing = ToolbarItemPlacement.topBarTrailing
+    let ToolbarLeading = ToolbarItemPlacement.navigationBarLeading
+    let ToolbarTrailing = ToolbarItemPlacement.navigationBarTrailing
 #else
     let ToolbarLeading = ToolbarItemPlacement.navigation
     let ToolbarTrailing = ToolbarItemPlacement.primaryAction

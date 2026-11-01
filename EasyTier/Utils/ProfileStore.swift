@@ -377,9 +377,9 @@ final class ProfileSession: ObservableObject, Equatable {
         registerConflictObserver()
     }
 
-    @MainActor
     deinit {
-        unregisterConflictObserver()
+        let observer = conflictObserver
+        Task { @MainActor in observer?.stop() }
     }
 
     func save() async throws {
@@ -697,7 +697,7 @@ enum ProfileStore {
             throw error
         }
 
-        return ProfileSession(name: configName, fileURL: fileURL, document: document)
+        return await ProfileSession(name: configName, fileURL: fileURL, document: document)
     }
 
     static func resolveConflictUseLocal(at url: URL) throws {

@@ -1,6 +1,6 @@
 import Foundation
 
-nonisolated enum ACLChainType: Int, Codable, CaseIterable, Identifiable {
+enum ACLChainType: Int, Codable, CaseIterable, Identifiable {
     case unspecified = 0
     case inbound = 1
     case outbound = 2
@@ -11,7 +11,7 @@ nonisolated enum ACLChainType: Int, Codable, CaseIterable, Identifiable {
     static let configurableCases: [ACLChainType] = [.inbound, .outbound, .forward]
 }
 
-nonisolated enum ACLAction: Int, Codable, CaseIterable, Identifiable {
+enum ACLAction: Int, Codable, CaseIterable, Identifiable {
     case noop = 0
     case allow = 1
     case drop = 2
@@ -21,7 +21,7 @@ nonisolated enum ACLAction: Int, Codable, CaseIterable, Identifiable {
     static let configurableCases: [ACLAction] = [.allow, .drop]
 }
 
-nonisolated enum ACLProtocol: Int, Codable, CaseIterable, Identifiable {
+enum ACLProtocol: Int, Codable, CaseIterable, Identifiable {
     case unspecified = 0
     case tcp = 1
     case udp = 2
@@ -34,7 +34,7 @@ nonisolated enum ACLProtocol: Int, Codable, CaseIterable, Identifiable {
     static let configurableCases: [ACLProtocol] = [.any, .tcp, .udp, .icmp, .icmpV6]
 }
 
-nonisolated struct ACLConfig: Codable, Equatable {
+struct ACLConfig: Codable, Equatable {
     var aclV1: ACLV1
 
     enum CodingKeys: String, CodingKey {
@@ -55,7 +55,7 @@ nonisolated struct ACLConfig: Codable, Equatable {
     }
 }
 
-nonisolated struct ACLV1: Codable, Equatable {
+struct ACLV1: Codable, Equatable {
     var chains: [ACLChain]
     var group: ACLGroupInfo
 
@@ -76,7 +76,7 @@ nonisolated struct ACLV1: Codable, Equatable {
     }
 }
 
-nonisolated struct ACLChain: Codable, Equatable, Identifiable {
+struct ACLChain: Codable, Equatable, Identifiable {
     var id = UUID()
     var name: String
     var chainType: ACLChainType
@@ -121,7 +121,7 @@ nonisolated struct ACLChain: Codable, Equatable, Identifiable {
     }
 }
 
-nonisolated struct ACLRule: Codable, Equatable, Identifiable {
+struct ACLRule: Codable, Equatable, Identifiable {
     var id = UUID()
     var name: String
     var description: String
@@ -211,7 +211,7 @@ nonisolated struct ACLRule: Codable, Equatable, Identifiable {
     }
 }
 
-nonisolated struct ACLGroupInfo: Codable, Equatable {
+struct ACLGroupInfo: Codable, Equatable {
     var declares: [ACLGroupIdentity]
     var members: [String]
 
@@ -232,7 +232,7 @@ nonisolated struct ACLGroupInfo: Codable, Equatable {
     }
 }
 
-nonisolated struct ACLGroupIdentity: Codable, Equatable, Identifiable {
+struct ACLGroupIdentity: Codable, Equatable, Identifiable {
     var id = UUID()
     var groupName: String
     var groupSecret: String

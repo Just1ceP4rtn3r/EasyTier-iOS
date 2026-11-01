@@ -283,7 +283,8 @@ private func configureManagerForConnection(_ manager: NETunnelProviderManager, l
 
 public func connectWithManager(_ manager: NETunnelProviderManager, logger: Logger? = nil) async throws {
     configureManagerForConnection(manager, logger: logger)
-    try await manager.saveToPreferences()
+    try await VPNPreferencesCompatibility.save(manager)
+    try await VPNPreferencesCompatibility.reload(manager)
     try manager.connection.startVPNTunnel()
 }
 

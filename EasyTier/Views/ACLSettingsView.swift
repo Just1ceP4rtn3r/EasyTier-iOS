@@ -62,7 +62,7 @@ struct ACLSettingsView: View {
                     NavigationLink {
                         ACLGroupEditorView(acl: aclBinding)
                     } label: {
-                        LabeledContent {
+                        CompatibleLabeledContent {
                             Text("\(groupNames.count)")
                                 .foregroundStyle(.secondary)
                         } label: {
@@ -75,8 +75,8 @@ struct ACLSettingsView: View {
             }
         }
         .navigationTitle("acl.title")
-        .scrollDismissesKeyboard(.immediately)
-        .formStyle(.grouped)
+
+
         .confirmationDialog(
             "acl.disable_confirmation",
             isPresented: $showDisableConfirmation,
@@ -177,12 +177,12 @@ private struct ACLChainEditorView: View {
         Form {
             Section {
                 Toggle("acl.chain_enabled", isOn: $chain.enabled)
-                LabeledContent("acl.chain_name") {
+                CompatibleLabeledContent("acl.chain_name") {
                     TextField("acl.chain_name", text: $chain.name)
                         .labelsHidden()
                         .multilineTextAlignment(.trailing)
                 }
-                LabeledContent("acl.chain_type") {
+                CompatibleLabeledContent("acl.chain_type") {
                     Picker("acl.chain_type", selection: $chain.chainType) {
                         ForEach(ACLChainType.configurableCases) { type in
                             Text(type.localizedKey).tag(type)
@@ -190,7 +190,7 @@ private struct ACLChainEditorView: View {
                     }
                     .labelsHidden()
                 }
-                LabeledContent("acl.default_action") {
+                CompatibleLabeledContent("acl.default_action") {
                     Picker("acl.default_action", selection: $chain.defaultAction) {
                         ForEach(ACLAction.configurableCases) { action in
                             Text(action.localizedKey).tag(action)
@@ -203,8 +203,8 @@ private struct ACLChainEditorView: View {
             }
 
             Section("acl.chain_description") {
-                TextField("acl.chain_description_placeholder", text: $chain.description, axis: .vertical)
-                    .lineLimit(2...4)
+                TextField("acl.chain_description_placeholder", text: $chain.description)
+                    .lineLimit(4)
             }
 
             Section {
@@ -237,8 +237,8 @@ private struct ACLChainEditorView: View {
             }
         }
         .navigationTitle(chain.name.isEmpty ? "ACL Chain" : chain.name)
-        .scrollDismissesKeyboard(.immediately)
-        .formStyle(.grouped)
+
+
         .listEditingToolbar(isVisible: !chain.rules.isEmpty)
     }
 
@@ -320,12 +320,12 @@ private struct ACLRuleEditorView: View {
         Form {
             Section {
                 Toggle("acl.rule_enabled", isOn: $rule.enabled)
-                LabeledContent("acl.rule_name") {
+                CompatibleLabeledContent("acl.rule_name") {
                     TextField("acl.rule_name", text: $rule.name)
                         .labelsHidden()
                         .multilineTextAlignment(.trailing)
                 }
-                LabeledContent("acl.protocol") {
+                CompatibleLabeledContent("acl.protocol") {
                     Picker("acl.protocol", selection: $rule.protocolType) {
                         ForEach(ACLProtocol.configurableCases) { protocolType in
                             Text(protocolType.localizedKey).tag(protocolType)
@@ -333,7 +333,7 @@ private struct ACLRuleEditorView: View {
                     }
                     .labelsHidden()
                 }
-                LabeledContent("acl.action") {
+                CompatibleLabeledContent("acl.action") {
                     Picker("acl.action", selection: $rule.action) {
                         ForEach(ACLAction.configurableCases) { action in
                             Text(action.localizedKey).tag(action)
@@ -343,7 +343,7 @@ private struct ACLRuleEditorView: View {
                     .pickerStyle(.segmented)
                     .frame(maxWidth: 220)
                 }
-                LabeledContent("acl.priority") {
+                CompatibleLabeledContent("acl.priority") {
                     Text("\(rule.priority)")
                         .foregroundStyle(.secondary)
                         .monospacedDigit()
@@ -351,8 +351,8 @@ private struct ACLRuleEditorView: View {
             }
 
             Section("acl.rule_description") {
-                TextField("acl.rule_description_placeholder", text: $rule.description, axis: .vertical)
-                    .lineLimit(2...4)
+                TextField("acl.rule_description_placeholder", text: $rule.description)
+                    .lineLimit(4)
             }
 
             ACLStringListEditor(
@@ -396,14 +396,14 @@ private struct ACLRuleEditorView: View {
 
             Section {
                 Toggle("acl.stateful", isOn: $rule.stateful)
-                LabeledContent("acl.rate_limit") {
+                CompatibleLabeledContent("acl.rate_limit") {
                     TextField("0", text: uint32Binding($rule.rateLimit), prompt: Text("0"))
                         .labelsHidden()
                         .multilineTextAlignment(.trailing)
                         .numberKeyboardType()
                         .frame(maxWidth: 140)
                 }
-                LabeledContent("acl.burst_limit") {
+                CompatibleLabeledContent("acl.burst_limit") {
                     TextField("0", text: uint32Binding($rule.burstLimit), prompt: Text("0"))
                         .labelsHidden()
                         .multilineTextAlignment(.trailing)
@@ -422,8 +422,8 @@ private struct ACLRuleEditorView: View {
             }
         }
         .navigationTitle(rule.name.isEmpty ? String(localized: "acl.edit_rule") : rule.name)
-        .scrollDismissesKeyboard(.immediately)
-        .formStyle(.grouped)
+
+
         .onChange(of: rule.rateLimit) { newValue in
             if newValue > 0 && rule.burstLimit == 0 {
                 rule.burstLimit = max(1, newValue)
@@ -446,7 +446,7 @@ private struct ACLStringListEditor: View {
                         .labelsHidden()
                         .font(.body.monospaced())
                         .adaptiveNoTextInputAutocapitalization()
-                        .autocorrectionDisabled()
+                        .disableAutocorrection(true)
                     Button(role: .destructive) {
                         guard values.indices.contains(index) else { return }
                         values.remove(at: index)
@@ -579,11 +579,11 @@ private struct ACLGroupEditorView: View {
             }
         }
         .navigationTitle("acl.groups")
-        .scrollDismissesKeyboard(.immediately)
-        .formStyle(.grouped)
+
+
         .listEditingToolbar(isVisible: !acl.aclV1.group.declares.isEmpty)
         .sheet(item: $editingGroup) { context in
-            NavigationStack {
+            CompatibleNavigationStack {
                 ACLGroupIdentityEditorView(
                     identity: context.identity,
                     existingNames: existingNames(excluding: context.index)
@@ -706,14 +706,14 @@ private struct ACLGroupIdentityEditorView: View {
     var body: some View {
         Form {
             Section {
-                LabeledContent("acl.group_name") {
+                CompatibleLabeledContent("acl.group_name") {
                     TextField("acl.group_name", text: $identity.groupName)
                         .labelsHidden()
                         .multilineTextAlignment(.trailing)
                         .adaptiveNoTextInputAutocapitalization()
-                        .autocorrectionDisabled()
+                        .disableAutocorrection(true)
                 }
-                LabeledContent("acl.group_secret") {
+                CompatibleLabeledContent("acl.group_secret") {
                     SecureField(
                         "common_text.empty",
                         text: $identity.groupSecret,
@@ -731,7 +731,7 @@ private struct ACLGroupIdentityEditorView: View {
         }
         .navigationTitle("acl.edit_group")
         .adaptiveNavigationBarTitleInline()
-        .formStyle(.grouped)
+
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {
                 Button {
@@ -846,7 +846,7 @@ private extension ACLProtocol {
             members: ["admin"]
         ))
     )
-    NavigationStack {
+    CompatibleNavigationStack {
         ACLSettingsView(acl: $acl)
     }
 }

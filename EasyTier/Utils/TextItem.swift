@@ -1,6 +1,6 @@
 import Foundation
 
-nonisolated struct TextItem: Identifiable, Equatable, Codable, CustomStringConvertible, ExpressibleByStringLiteral {
+struct TextItem: Identifiable, Equatable, Codable, CustomStringConvertible, ExpressibleByStringLiteral {
     var id = UUID()
     var text: String
     

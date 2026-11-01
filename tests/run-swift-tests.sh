@@ -4,7 +4,7 @@ cd "$(dirname "$0")/.."
 test_dir=$(mktemp -d /tmp/easytier-tunnel-tests.XXXXXX)
 trap 'rm -rf "$test_dir"' EXIT
 xcrun swiftc -emit-module -emit-library -module-name EasyTierShared \
-  -module-cache-path "$test_dir/cache" EasyTierShared/EasyTierShared.swift \
+  -module-cache-path "$test_dir/cache" EasyTierShared/EasyTierShared.swift EasyTierShared/VPNPreferencesCompatibility.swift \
   -o "$test_dir/libEasyTierShared.dylib"
 xcrun clang -I EasyTierNetworkExtension -c tests/tunnel_ffi_stubs.c -o "$test_dir/stubs.o"
 # Keep private lifecycle methods private in production. Appending the tests to
