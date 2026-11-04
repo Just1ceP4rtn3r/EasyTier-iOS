@@ -85,3 +85,15 @@ Device validation used HID touch events through UIKit to press the actual
 Connect and Disconnect buttons, including a subsequent reconnect. Screenshots
 confirmed the running and disconnected states. No direct NETunnelProviderManager
 start was used for this UI validation.
+
+## 内存峰值与状态查询分配
+
+VPN 扩展导出系统日志时，原实现从开机开始枚举，并把所有格式化日志追加到单个字符串，最后再编码写入文件。峰值随历史日志长度增长。现改为从最近日志开始惰性枚举、逐条写入文件，输出最多 8 MiB，并在达到限制时写入截断提示；空结果或失败时清理未完成文件，单次导出复用日期格式器。顺序为从新到旧。
+
+模拟 200,000 条、每条约 1,000 字符的日志，在 macOS 上以优化构建测量：原拼接方式输出 201,488,890 字节，最大 RSS 473,317,376 字节；流式限额方式输出 8,387,963 字节，最大 RSS 4,194,304 字节。输出范围有意不同：新实现限制了导出大小。此结果证明原导出路径能够超过设备上约 150 MiB 的扩展限额，但不能证明历史 Jetsam 发生时用户正在导出日志。
+
+Rust `get_running_info` 原先调用上游 `collect_network_infos_sync`。v2.6.4 的该方法每次创建新的 Tokio Runtime；界面周期性查询会反复创建并销毁线程池及相关调度资源。现复用进程既有运行时，通过 `get_network_info` 仅获取当前实例快照，保持返回 JSON 和 CString 释放约定。此处修复的是重复分配，不将它表述为已证实的永久泄漏。
+
+`bash tests/run-swift-tests.sh` 增加日志导出的 UTF-8、惰性枚举、文件大小上限、截断提示与失败清理检查。Rust 生命周期测试增加每次启动后的 64 次真实状态查询及返回字符串释放检查。
+
+本次验证：Rust `cargo test --lib --locked` 33 项全部通过（含跨两次会话共 128 次状态查询）；Swift 隧道生命周期、配置持久化、Profile 选择及日志边界检查全部通过；修改后的日志模块按 `arm64-apple-ios15.0` 编译通过。完整真机播放/VPN 压力场景仍需单独运行；这些结果不等同于已复现并消除了每一次历史 Jetsam。

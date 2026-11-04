@@ -24,3 +24,6 @@ xcrun swiftc -swift-version 5 -parse-as-library \
   EasyTier/Views/DashboardView+Profiles.swift tests/ProfileSelectionTests.swift \
   -o "$test_dir/profile-tests"
 "$test_dir/profile-tests"
+
+xcrun swiftc EasyTierNetworkExtension/OSLogExporter.swift tests/MemoryExportTests.swift -o "$test_dir/memory-tests"
+"$test_dir/memory-tests"

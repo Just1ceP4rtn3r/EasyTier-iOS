@@ -20,40 +20,52 @@ enum OSLogExporter {
             throw ExportError.containerUnavailable
         }
         let store = try OSLogStore(scope: .currentProcessIdentifier)
-        let startPosition = store.position(timeIntervalSinceLatestBoot: 0)
-        let entries = try store.getEntries(at: startPosition)
-        var output = ""
-
-        for entry in entries {
-            if let log = entry as? OSLogEntryLog {
-                output.append(format(log))
-                output.append("\n")
-            } else if let signpost = entry as? OSLogEntrySignpost {
-                output.append(format(signpost))
-                output.append("\n")
+        // Start with recent diagnostics so the size cap does not preserve only old history.
+        let entries = try store.getEntries(with: .reverse)
+        let formatter = dateFormatter
+        let lines = entries.lazy.compactMap { entry -> String? in
+            autoreleasepool {
+                if let log = entry as? OSLogEntryLog { return format(log, formatter: formatter) }
+                if let signpost = entry as? OSLogEntrySignpost { return format(signpost, formatter: formatter) }
+                return nil
             }
         }
-
-        guard !output.isEmpty else {
-            throw ExportError.emptyLogs
-        }
-
-        let filename = "EasyTier-NE-oslog-\(Int(Date().timeIntervalSince1970)).log"
-        let url = containerURL.appendingPathComponent(filename)
-        try output.write(to: url, atomically: true, encoding: .utf8)
+        let url = containerURL.appendingPathComponent("EasyTier-NE-oslog-\(UUID().uuidString).log")
+        try writeLines(lines, to: url)
         return url
     }
 
-    private static func format(_ log: OSLogEntryLog) -> String {
-        let timestamp = dateFormatter.string(from: log.date)
+    // Never accumulate the process's entire log history in the 150 MB VPN extension.
+    // Bound disk output too, while keeping enumeration lazy and per-entry temporaries short lived.
+    static func writeLines<S: Sequence>(_ lines: S, to url: URL, maxBytes: Int = 8 * 1024 * 1024) throws where S.Element == String {
+        let marker = Data("[Export truncated: size limit reached]\n".utf8)
+        guard maxBytes >= marker.count else { throw ExportError.emptyLogs }
+        FileManager.default.createFile(atPath: url.path, contents: nil)
+        let file = try FileHandle(forWritingTo: url)
+        var success = false
+        defer { try? file.close(); if !success { try? FileManager.default.removeItem(at: url) } }
+        var written = 0
+        for line in lines {
+            let data = Data((line + "\n").utf8)
+            if data.count > maxBytes - marker.count - written {
+                try file.write(contentsOf: marker); written += marker.count; break
+            }
+            try file.write(contentsOf: data); written += data.count
+        }
+        guard written > 0 else { throw ExportError.emptyLogs }
+        success = true
+    }
+
+    private static func format(_ log: OSLogEntryLog, formatter: ISO8601DateFormatter) -> String {
+        let timestamp = formatter.string(from: log.date)
         let level = formatLevel(log.level)
         let subsystem = log.subsystem
         let category = log.category
         return "[\(timestamp)] [\(level)] [\(subsystem)] [\(category)] \(log.composedMessage)"
     }
 
-    private static func format(_ signpost: OSLogEntrySignpost) -> String {
-        let timestamp = dateFormatter.string(from: signpost.date)
+    private static func format(_ signpost: OSLogEntrySignpost, formatter: ISO8601DateFormatter) -> String {
+        let timestamp = formatter.string(from: signpost.date)
         let type = String(describing: signpost.signpostType).uppercased()
         let subsystem = signpost.subsystem
         let category = signpost.category

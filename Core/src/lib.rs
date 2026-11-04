@@ -455,14 +455,15 @@ pub extern "C" fn get_running_info(json: *mut *const c_char, err_msg: *mut *cons
                 return Err("json is null".to_string());
             }
             let (manager, id) = active_instance()?;
-            let infos = manager
-                .collect_network_infos_sync()
-                .map_err(|error| error.to_string())?;
-            let info = infos
-                .get(&id)
+            // The upstream synchronous helper constructs and destroys a full Tokio
+            // runtime on every status poll. Reuse our session runtime instead and
+            // snapshot only the active instance, not a map of all instances.
+            let info = CONTEXT
+                .runtime
+                .block_on(manager.get_network_info(&id))
                 .ok_or_else(|| "running info is unavailable".to_string())?;
             let value =
-                CString::new(serde_json::to_string(info).map_err(|error| error.to_string())?)
+                CString::new(serde_json::to_string(&info).map_err(|error| error.to_string())?)
                     .map_err(|error| error.to_string())?;
             unsafe {
                 *json = value.into_raw();
@@ -563,6 +564,18 @@ mod tests {
             assert_eq!(status["status"], "running");
             assert_eq!(status["generation"], generation);
             assert_eq!(status["options"]["ipv4"], "10.42.0.1/24");
+            // Exercise the real async snapshot API repeatedly through the C ABI.
+            // Each returned string must remain valid JSON and be freed by its caller.
+            for _ in 0..64 {
+                let mut info = std::ptr::null();
+                assert_eq!(get_running_info(&mut info, &mut error), 0);
+                assert!(!info.is_null());
+                let snapshot: serde_json::Value =
+                    serde_json::from_str(unsafe { CStr::from_ptr(info) }.to_str().unwrap())
+                        .unwrap();
+                free_string(info);
+                assert!(snapshot.is_object());
+            }
             assert_eq!(stop_network_instance(), 0);
             assert_eq!(
                 complete_instance_setup(generation, true, std::ptr::null()),
