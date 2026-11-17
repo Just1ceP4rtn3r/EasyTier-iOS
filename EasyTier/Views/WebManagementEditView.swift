@@ -19,23 +19,20 @@ struct WebManagementEditView: View {
     var body: some View {
         Form {
             Section {
-                LabeledContent("web_management.server.placeholder") {
+                CompatLabeledContent("web_management.server.placeholder") {
                     TextField(
                         "tcp://et-web.console.easytier.net:22020/your_token",
-                        text: $server,
-                        prompt: Text("tcp://localhost:22020/your_token"),
-                        axis: .vertical
+                        text: $server
                     )
                     .labelsHidden()
                     .multilineTextAlignment(.trailing)
                     .adaptiveNoTextInputAutocapitalization()
-                    .autocorrectionDisabled()
+                    .disableAutocorrection(true)
                 }
-                LabeledContent("hostname") {
+                CompatLabeledContent("hostname") {
                     TextField(
                         "common_text.default",
-                        text: $hostname,
-                        prompt: Text("common_text.default")
+                        text: $hostname
                     )
                     .labelsHidden()
                     .multilineTextAlignment(.trailing)
@@ -47,31 +44,28 @@ struct WebManagementEditView: View {
             } footer: {
                 Text("web_management.secure_mode_help")
             }
-            Section("web_management.machine_id") {
-                LabeledContent {
+            Section(header: Text("web_management.machine_id")) {
+                CompatLabeledContent {
                     Button(action: copyMachineID) {
                         Image(systemName: "doc.on.doc")
                     }
                     .help("web_management.machine_id.copy")
                 } label: {
                     Text(machineID).font(.system(.caption, design: .monospaced))
-                        .textSelection(.enabled)
+                        .compatTextSelection()
                 }
-                Button("web_management.machine_id.reset", role: .destructive) {
+                Button("web_management.machine_id.reset") {
                     showResetMachineIDAlert = true
                 }
             }
         }
-        .formStyle(.grouped)
-        .alert("web_management.machine_id.reset_confirm_title", isPresented: $showResetMachineIDAlert) {
-            Button("common.cancel", role: .cancel) {}
-            Button("reset", role: .destructive) {
+
+        .compatAlert(isPresented: $showResetMachineIDAlert) {
+            Alert(title: Text("web_management.machine_id.reset_confirm_title"), message: Text("web_management.machine_id.reset_confirm_message"), primaryButton: .destructive(Text("reset")) {
                 guard isEnabled else { return }
                 machineID = UUID().uuidString.lowercased()
                 onSave()
-            }
-        } message: {
-            Text("web_management.machine_id.reset_confirm_message")
+            }, secondaryButton: .cancel())
         }
     }
 

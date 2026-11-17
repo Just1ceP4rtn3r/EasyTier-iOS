@@ -266,7 +266,7 @@ private func configureManagerForConnection(_ manager: NETunnelProviderManager, l
     manager.isEnabled = true
     if let defaults = UserDefaults(suiteName: APP_GROUP_ID) {
         manager.protocolConfiguration?.includeAllNetworks = defaults.bool(forKey: "includeAllNetworks")
-        manager.protocolConfiguration?.excludeLocalNetworks = defaults.bool(forKey: "excludeLocalNetworks")
+        if #available(iOS 14.2, macOS 11.0, *) { manager.protocolConfiguration?.excludeLocalNetworks = defaults.bool(forKey: "excludeLocalNetworks") }
         if #available(iOS 16.4, macOS 13.3, *) {
             manager.protocolConfiguration?.excludeCellularServices = defaults.bool(forKey: "excludeCellularServices")
             manager.protocolConfiguration?.excludeAPNs = defaults.bool(forKey: "excludeAPNs")
@@ -274,7 +274,7 @@ private func configureManagerForConnection(_ manager: NETunnelProviderManager, l
         if #available(iOS 17.4, macOS 14.4, *) {
             manager.protocolConfiguration?.excludeDeviceCommunication = defaults.bool(forKey: "excludeDeviceCommunication")
         }
-        manager.protocolConfiguration?.enforceRoutes = defaults.bool(forKey: "enforceRoutes")
+        if #available(iOS 14.2, macOS 11.0, *) { manager.protocolConfiguration?.enforceRoutes = defaults.bool(forKey: "enforceRoutes") }
         if let logger {
             logger.debug("connect with protocol configuration: \(manager.protocolConfiguration)")
         }
@@ -283,7 +283,8 @@ private func configureManagerForConnection(_ manager: NETunnelProviderManager, l
 
 public func connectWithManager(_ manager: NETunnelProviderManager, logger: Logger? = nil) async throws {
     configureManagerForConnection(manager, logger: logger)
-    try await manager.saveToPreferences()
+    try await manager.compatSaveToPreferences()
+    try await manager.compatLoadFromPreferences()
     try manager.connection.startVPNTunnel()
 }
 
@@ -301,5 +302,44 @@ public func connectWithManager(_ manager: NETunnelProviderManager, logger: Logge
             return
         }
         completionHandler?(nil)
+    }
+}
+
+
+// Explicit callbacks avoid the imported async Objective-C error continuation on iOS 14.
+private struct LoadedTunnelManagers: @unchecked Sendable { let managers: [NETunnelProviderManager] }
+extension NETunnelProviderManager {
+    public static func compatLoadAllFromPreferences() async throws -> [NETunnelProviderManager] {
+        let loaded: LoadedTunnelManagers = try await withCheckedThrowingContinuation { continuation in
+            loadAllFromPreferences { managers, error in
+                if let error { continuation.resume(throwing: error) }
+                else { continuation.resume(returning: LoadedTunnelManagers(managers: managers ?? [])) }
+            }
+        }
+        return loaded.managers
+    }
+    public func compatSaveToPreferences() async throws {
+        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
+            saveToPreferences { error in
+                if let error { continuation.resume(throwing: error) }
+                else { continuation.resume(returning: ()) }
+            }
+        }
+    }
+    public func compatLoadFromPreferences() async throws {
+        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
+            loadFromPreferences { error in
+                if let error { continuation.resume(throwing: error) }
+                else { continuation.resume(returning: ()) }
+            }
+        }
+    }
+    public func compatRemoveFromPreferences() async throws {
+        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
+            removeFromPreferences { error in
+                if let error { continuation.resume(throwing: error) }
+                else { continuation.resume(returning: ()) }
+            }
+        }
     }
 }

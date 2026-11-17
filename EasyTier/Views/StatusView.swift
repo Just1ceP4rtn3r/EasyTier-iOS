@@ -46,7 +46,7 @@ struct StatusView<Manager: NetworkExtensionManagerProtocol>: View {
 
     var body: some View {
         Group {
-            if sizeClass == .regular {
+            if #available(iOS 16, macOS 13, *), sizeClass == .regular {
                 ViewThatFits(in: .horizontal) {
                     doubleComlum
                     singleColumn
@@ -85,36 +85,36 @@ struct StatusView<Manager: NetworkExtensionManagerProtocol>: View {
             }
             refreshStatus()
         }
-        .sheet(item: $selectedPeerRoute) { selection in
+        .compatSheet(item: $selectedPeerRoute) { selection in
             PeerConnDetailSheet(status: $status, peerRouteID: selection.id)
         }
-        .sheet(isPresented: $showNodeInfo) {
+        .compatSheet(isPresented: $showNodeInfo) {
             NodeInfoSheet(status: $status)
         }
-        .sheet(isPresented: $showIPInfo) {
+        .compatSheet(isPresented: $showIPInfo) {
             IPInfoSheet(status: $status)
         }
-        .sheet(isPresented: $showStunInfo) {
+        .compatSheet(isPresented: $showStunInfo) {
             StunInfoSheet(status: $status)
         }
-        .sheet(isPresented: $showNetworkSettings) {
+        .compatSheet(isPresented: $showNetworkSettings) {
             NetworkSettingsSheet(settings: $lastNetworkSettings)
         }
     }
     
     var singleColumn: some View {
         Form {
-            Section("device.status") {
+            Section(header: Text("device.status")) {
                 localStatus
             }
 
             if let error = status?.errorMsg {
-                Section("common.error") {
+                Section(header: Text("common.error")) {
                     HStack {
                         Image(systemName: "exclamationmark.triangle.fill")
                         Text(error)
                     }
-                    .foregroundStyle(.red)
+                    .foregroundColor(.red)
                 }
             }
 
@@ -137,44 +137,44 @@ struct StatusView<Manager: NetworkExtensionManagerProtocol>: View {
                 }
             }
 #if os(iOS)
-            Section("common.info") { info }
+            Section(header: Text("common.info")) { info }
 #else
             info
 #endif
         }
-        .formStyle(.grouped)
+
     }
     
     var doubleComlum: some View {
         HStack(spacing: 0) {
             Form {
-                Section("device.status") {
+                Section(header: Text("device.status")) {
                     localStatus
                 }
 
                 if let error = status?.errorMsg {
-                    Section("common.error") {
+                    Section(header: Text("common.error")) {
                         HStack {
                             Image(systemName: "exclamationmark.triangle.fill")
                             Text(error)
                         }
-                        .foregroundStyle(.red)
+                        .foregroundColor(.red)
                     }
                 }
                 
-                Section("peer_info") {
+                Section(header: Text("peer_info")) {
                     peerInfo
                 }
             }
             .frame(minWidth: columnMinWidth, maxWidth: columnMaxWidth)
-            .formStyle(.grouped)
+
             Form {
-                Section("event_log") {
+                Section(header: Text("event_log")) {
                     TimelineLogPanel(events: status?.events ?? [])
                 }
             }
             .frame(minWidth: columnMinWidth)
-            .formStyle(.grouped)
+
         }
     }
     
@@ -193,9 +193,9 @@ struct StatusView<Manager: NetworkExtensionManagerProtocol>: View {
                         Text(networkName)
                             .font(.title2)
                             .fontWeight(.bold)
-                        Text(status?.myNodeInfo?.version ?? String(localized: "not_available"))
+                        Text(status?.myNodeInfo?.version ?? NSLocalizedString("not_available", comment: ""))
                             .font(.caption)
-                            .foregroundStyle(.secondary)
+                            .foregroundColor(.secondary)
                     }
                     Spacer()
                     StatusBadge(status: .init(status?.running))
@@ -303,8 +303,8 @@ struct PeerRowView<RightView>: View where RightView: View {
                     .frame(width: 36, height: 36)
 #endif
                 Image(systemName: iconSystemName)
-                    .foregroundStyle(color)
-                    .symbolRenderingMode(.monochrome)
+                    .foregroundColor(color)
+
 
             }.padding(.trailing, 8)
 
@@ -326,7 +326,7 @@ struct PeerRowView<RightView>: View where RightView: View {
                 }
                 .lineLimit(1)
                 .font(.caption)
-                .foregroundStyle(.secondary)
+                .foregroundColor(.secondary)
             }
 
             Spacer()
@@ -382,10 +382,10 @@ struct LocalPeerRowView: View {
         ) {
             Text("local")
                 .font(.caption2)
-                .foregroundStyle(.secondary)
+                .foregroundColor(.secondary)
                 .padding(.horizontal, 6)
                 .padding(.vertical, 2)
-                .background(.secondary.opacity(0.1))
+                .background(Color.secondary.opacity(0.1))
                 .clipShape(Capsule())
         }
     }
@@ -455,15 +455,15 @@ struct RemotePeerRowView: View {
                         Text("\(String(format: "%.1f", latency / 1000.0)) ms")
                             .font(.callout)
                             .fontWeight(.semibold)
-                            .monospacedDigit()
+                            .font(.system(.body, design: .monospaced))
                     }
-                    .foregroundStyle(latencyColor(latency))
+                    .foregroundColor(latencyColor(latency))
                 }
                 
                 HStack {
                     Text(pair.route.cost == 1 ? "p2p" : "relay_\(pair.route.cost)")
                         .font(.caption2)
-                        .foregroundStyle(pair.route.cost == 1 ? .blue : .purple)
+                        .foregroundColor(pair.route.cost == 1 ? .blue : .purple)
                         .padding(.horizontal, 6)
                         .padding(.vertical, 2)
                         .background((pair.route.cost == 1 ? Color.blue : Color.purple).opacity(0.1))
@@ -472,7 +472,7 @@ struct RemotePeerRowView: View {
                         let lossPercent = String(format: "%.0f", lossRate * 100)
                         Text("loss_rate_format_\(lossPercent)")
                             .font(.caption2)
-                            .foregroundStyle(lossRateColor(lossRate))
+                            .foregroundColor(lossRateColor(lossRate))
                             .padding(.horizontal, 6)
                             .padding(.vertical, 2)
                             .background(lossRateColor(lossRate).opacity(0.1))
@@ -554,19 +554,19 @@ struct TrafficItem: View {
             case .Tx:
                 HStack(spacing: 4) {
                     Image(systemName: "arrow.up.arrow.down")
-                        .symbolRenderingMode(.palette)
-                        .foregroundStyle(.orange, .orange.opacity(0.3))
+
+                        .foregroundColor(.orange)
                     Text("upload")
-                        .foregroundStyle(.orange)
+                        .foregroundColor(.orange)
                 }
                 .font(.subheadline)
             case .Rx:
                 HStack(spacing: 4) {
                     Image(systemName: "arrow.up.arrow.down")
-                        .symbolRenderingMode(.palette)
-                        .foregroundStyle(.blue.opacity(0.3), .blue)
+
+                        .foregroundColor(.blue)
                     Text("download")
-                        .foregroundStyle(.blue)
+                        .foregroundColor(.blue)
                 }
                 .font(.subheadline)
             }
@@ -576,7 +576,7 @@ struct TrafficItem: View {
                     .fontWeight(.medium)
                 Text(unit)
                     .font(.subheadline)
-                    .foregroundStyle(.secondary)
+                    .foregroundColor(.secondary)
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -610,8 +610,8 @@ struct StatItem: View {
             if #available(iOS 26.0, macOS 26.0, *) {
                 Label(label, systemImage: icon)
                     .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .labelIconToTitleSpacing(2)
+                    .foregroundColor(.secondary)
+
             } else {
                 HStack(spacing: 4) {
                     Image(systemName: icon)
@@ -620,7 +620,7 @@ struct StatItem: View {
                         .font(.caption)
                 }
                 .padding(.leading, 4)
-                .foregroundStyle(.secondary)
+                .foregroundColor(.secondary)
             }
             Text(value)
                 .font(.subheadline)
@@ -668,7 +668,7 @@ struct StatusBadge: View {
             Text(status.rawValue)
                 .font(.caption)
                 .fontWeight(.bold)
-                .foregroundStyle(badgeColor)
+                .foregroundColor(badgeColor)
         }
         .padding(.horizontal, 10)
         .padding(.vertical, 6)

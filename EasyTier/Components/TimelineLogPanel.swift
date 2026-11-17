@@ -11,7 +11,7 @@ struct TimelineLogPanel: View {
         if timelineEntries.isEmpty {
             Text("no_parsed_events")
                 .font(.caption)
-                .foregroundStyle(.secondary)
+                .foregroundColor(.secondary)
                 .padding()
         } else {
             LazyVStack(spacing: 0) {
@@ -35,16 +35,16 @@ struct TimelineRow: View {
                     Text(date, style: .time) // e.g., 2:31 PM
                         .font(.caption)
                         .fontWeight(.bold)
-                        .foregroundStyle(.primary)
+                        .foregroundColor(.primary)
                     
-                    Text(date.formatted(.dateTime.month().day())) // e.g., Jan 4
+                    Text(DateFormatter.localizedString(from: date, dateStyle: .short, timeStyle: .none)) // e.g., Jan 4
                         .font(.caption2)
-                        .foregroundStyle(.secondary)
+                        .foregroundColor(.secondary)
                 } else {
                     Text("not_available")
                         .font(.caption)
                         .fontWeight(.bold)
-                        .foregroundStyle(.primary)
+                        .foregroundColor(.primary)
                 }
             }
             .padding(.top, 2)
@@ -73,9 +73,9 @@ struct TimelineRow: View {
                 }
                 Text(entry.payload)
                     .font(.system(.caption, design: .monospaced))
-                    .foregroundStyle(.secondary)
+                    .foregroundColor(.secondary)
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .textSelection(.enabled)
+                    .compatTextSelection()
             }
             .padding(.bottom, 24)
         }

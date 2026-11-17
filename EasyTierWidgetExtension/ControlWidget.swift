@@ -46,7 +46,7 @@ extension EasyTierControlWidget {
         }
 
         func currentValue() async throws -> Bool {
-            let managers = try await NETunnelProviderManager.loadAllFromPreferences()
+            let managers = try await NETunnelProviderManager.compatLoadAllFromPreferences()
             guard let manager = managers.first else {
                 return false
             }
@@ -55,6 +55,7 @@ extension EasyTierControlWidget {
     }
 }
 
+@available(iOS 18, macOS 15, *)
 struct ToggleVPNIntent: SetValueIntent {
     static let title: LocalizedStringResource = "toggle_vpn"
 
@@ -62,7 +63,7 @@ struct ToggleVPNIntent: SetValueIntent {
     var value: Bool
 
     func perform() async throws -> some IntentResult {
-        let managers = try await NETunnelProviderManager.loadAllFromPreferences()
+        let managers = try await NETunnelProviderManager.compatLoadAllFromPreferences()
         guard let manager = managers.first else {
             throw TunnelManagerError.unavailable
         }

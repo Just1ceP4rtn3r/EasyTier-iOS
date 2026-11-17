@@ -57,7 +57,7 @@ struct VPNStatusProvider: TimelineProvider {
 
     private func fetchConnectionStatus() async -> Bool {
         do {
-            let managers = try await NETunnelProviderManager.loadAllFromPreferences()
+            let managers = try await NETunnelProviderManager.compatLoadAllFromPreferences()
             guard let manager = managers.first else {
                 return false
             }
@@ -68,7 +68,7 @@ struct VPNStatusProvider: TimelineProvider {
     }
 
     private func fetchProfileName() -> String {
-        if getOptions()?.mode == .web { return String(localized: "web_management.title") }
+        if getOptions()?.mode == .web { return NSLocalizedString("web_management.title", comment: "") }
         let defaults = UserDefaults(suiteName: APP_GROUP_ID)
         return defaults?.string(forKey: "selectedProfileName") ?? ""
     }
@@ -96,7 +96,7 @@ struct VPNStatusWidgetView: View {
                     Text(entry.isConnected ? "vpn_connected" : "vpn_disconnected")
                         .font(.caption)
                         .fontWeight(.bold)
-                        .foregroundStyle(badgeColor)
+                        .foregroundColor(badgeColor)
                         .lineLimit(1)
                         .minimumScaleFactor(0.7)
                 }
@@ -109,7 +109,7 @@ struct VPNStatusWidgetView: View {
                     Spacer(minLength: 8)
                     Text("EasyTier")
                         .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .foregroundColor(.secondary)
                         .lineLimit(1)
                 }
             }
@@ -122,7 +122,7 @@ struct VPNStatusWidgetView: View {
             if entry.isConnected {
                 Text(entry.ipAddress ?? "DHCP")
                     .font(family == .systemSmall ? .subheadline : .callout)
-                    .foregroundStyle(.secondary)
+                    .foregroundColor(.secondary)
                     .lineLimit(1)
                     .minimumScaleFactor(0.7)
             }
@@ -136,18 +136,10 @@ struct VPNStatusWidgetView: View {
                     if #available(iOS 17.0, macOS 14.0, *) {
                         Button(text, intent: ToggleVPNConnectionIntent())
                     } else {
-                        Button(text) {
-                            Task {
-                                _ = try? await ToggleVPNConnectionIntent().perform()
-                            }
-                        }
+                        Link(destination: URL(string: "easytier://")!) { Text(text).padding(8).background(Color.accentColor).foregroundColor(.white).cornerRadius(8) }
                     }
                 }
                 .lineLimit(1)
-                .controlSize(family == .systemSmall ? .small : .regular)
-                .tint(entry.isConnected ? Color.red : Color.accentColor)
-                .buttonStyle(.borderedProminent)
-                .widgetAccentable()
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
@@ -168,11 +160,12 @@ struct EasyTierStatusWidget: Widget {
     }
 }
 
+@available(iOS 16, macOS 13, *)
 struct ToggleVPNConnectionIntent: AppIntent {
     static let title: LocalizedStringResource = "toggle_vpn"
 
     func perform() async throws -> some IntentResult {
-        let managers = try await NETunnelProviderManager.loadAllFromPreferences()
+        let managers = try await NETunnelProviderManager.compatLoadAllFromPreferences()
         guard let manager = managers.first else {
             throw TunnelManagerError.unavailable
         }

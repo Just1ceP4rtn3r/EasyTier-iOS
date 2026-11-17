@@ -49,7 +49,7 @@ struct ContentView<Manager: NetworkExtensionManagerProtocol>: View {
                     Image(systemName: "network")
                         .resizable()
                         .frame(width: 128, height: 128)
-                        .foregroundStyle(Color.accentColor.opacity(0.2))
+                        .foregroundColor(Color.accentColor.opacity(0.2))
                 }
                 .ignoresSafeArea()
             }
@@ -71,7 +71,7 @@ struct ContentView<Manager: NetworkExtensionManagerProtocol>: View {
                 SettingsView(manager: manager, selectedSession: selectedSession)
                     .tabItem {
                         Image(systemName: "gearshape")
-                            .environment(\.symbolVariants, .none)
+
                         Text("settings")
                     }
             }

@@ -1,6 +1,7 @@
 import SwiftUI
 
-struct IPv4Field: View {
+@available(iOS 15, macOS 12, *)
+struct ModernIPv4Field: View {
 #if os(iOS)
     @AppStorage("plainTextIPInput") var plainTextIPInput: Bool = false
 #else
@@ -23,11 +24,11 @@ struct IPv4Field: View {
     var body: some View {
         HStack(spacing: 0) {
             if plainTextIPInput {
-                TextField("0.0.0.0", text: $ipAddress, prompt: Text("0.0.0.0"))
+                TextField("0.0.0.0", text: $ipAddress)
                     .labelsHidden()
                     .decimalKeyboardType()
                     .multilineTextAlignment(.trailing)
-                    .font(.body.monospaced())
+                    .font(.system(.body, design: .monospaced))
             } else {
 #if os(iOS)
                 ForEach(0..<4, id: \.self) { index in
@@ -35,7 +36,7 @@ struct IPv4Field: View {
                     
                     if index < 3 {
                         Text(".")
-                            .foregroundStyle(.secondary)
+                            .foregroundColor(.secondary)
                             .padding(.horizontal, 1)
                             .padding(.bottom, 2)
                     }
@@ -45,18 +46,18 @@ struct IPv4Field: View {
             
             if let lengthBinding = length {
                 Text("/")
-                    .foregroundStyle(.secondary)
+                    .foregroundColor(.secondary)
                     .padding(.horizontal, plainTextIPInput ? 8 : 2)
                     .padding(.bottom, 2)
                 
                 if plainTextIPInput {
-                    TextField("32", text: lengthBinding, prompt: Text("32"))
+                    TextField("32", text: lengthBinding)
                         .labelsHidden()
                         .disabled(disabledLengthEdit)
                         .numberKeyboardType()
                         .multilineTextAlignment(.trailing)
                         .fixedSize(horizontal: true, vertical: false)
-                        .font(.body.monospaced())
+                        .font(.system(.body, design: .monospaced))
                 } else {
 #if os(iOS)
                     TextField("32", text: Binding(
@@ -68,7 +69,7 @@ struct IPv4Field: View {
                     .multilineTextAlignment(.center)
                     .frame(width: 40)
                     .focused($focusedField, equals: 4)
-                    .font(.body.monospaced())
+                    .font(.system(.body, design: .monospaced))
 #endif
                 }
             }
@@ -96,7 +97,7 @@ struct IPv4Field: View {
         .multilineTextAlignment(.center)
         .frame(minWidth: 30, maxWidth: 45)
         .focused($focusedField, equals: index)
-        .font(.body.monospaced())
+        .font(.system(.body, design: .monospaced))
     }
 #endif
     
@@ -218,4 +219,15 @@ struct IPv4Field: View {
             setFocusedField(3)
         }
     }
+}
+
+struct IPv4Field: View {
+ @Binding var ipAddress: String
+ var length: Binding<String>?
+ var disabledLengthEdit: Bool
+ init(ip: Binding<String>, length: Binding<String>? = nil, disabledLengthEdit: Bool = false) { _ipAddress=ip; self.length=length; self.disabledLengthEdit=disabledLengthEdit }
+ var body: some View {
+  if #available(iOS 15, macOS 12, *) { return AnyView(ModernIPv4Field(ip: $ipAddress, length: length, disabledLengthEdit: disabledLengthEdit)) }
+  return AnyView(HStack { TextField("0.0.0.0", text: $ipAddress).decimalKeyboardType(); if let length { Text("/"); TextField("32", text: length).numberKeyboardType().disabled(disabledLengthEdit) } })
+ }
 }

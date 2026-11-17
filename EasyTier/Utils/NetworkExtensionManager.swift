@@ -143,7 +143,7 @@ class NetworkExtensionManager: NetworkExtensionManagerProtocol {
         manager.protocolConfiguration = tunnelProtocol
         manager.isEnabled = true
         do {
-            try await manager.saveToPreferences()
+            try await manager.compatSaveToPreferences()
             return manager
         } catch {
             Self.logger.error("install() failed: \(String(describing: error))")
@@ -154,11 +154,11 @@ class NetworkExtensionManager: NetworkExtensionManagerProtocol {
     func load() async throws {
         Self.logger.info("load()")
         do {
-            let managers = try await NETunnelProviderManager.loadAllFromPreferences()
+            let managers = try await NETunnelProviderManager.compatLoadAllFromPreferences()
             let manager = managers.first
             for m in managers {
                 if m != manager {
-                    try? await m.removeFromPreferences()
+                    try? await m.compatRemoveFromPreferences()
                     Self.logger.info("load() removed unnecessary profile")
                 }
             }
@@ -273,7 +273,7 @@ class NetworkExtensionManager: NetworkExtensionManagerProtocol {
         syncWidgetState()
 
         while [.connecting, .connected, .reasserting, .disconnecting].contains(connection.status) {
-            try? await Task.sleep(for: .milliseconds(100))
+            try? await Task.sleep(nanoseconds: 100000000)
         }
     }
     
@@ -281,7 +281,7 @@ class NetworkExtensionManager: NetworkExtensionManagerProtocol {
         guard let manager else { return }
         manager.localizedDescription = name
         manager.protocolConfiguration?.serverAddress = server
-        try? await manager.saveToPreferences()
+        try? await manager.compatSaveToPreferences()
     }
     
     func fetchRunningInfo(_ callback: @escaping ((NetworkStatus) -> Void)) {
@@ -451,7 +451,7 @@ class NetworkExtensionManager: NetworkExtensionManagerProtocol {
             manager.onDemandRules = nil
         }
         manager.isOnDemandEnabled = enabled
-        try await manager.saveToPreferences()
+        try await manager.compatSaveToPreferences()
         isAlwaysOnEnabled = enabled
     }
 }

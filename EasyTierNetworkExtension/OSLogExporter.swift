@@ -19,6 +19,9 @@ enum OSLogExporter {
         ) else {
             throw ExportError.containerUnavailable
         }
+        guard #available(iOS 15, *) else {
+            throw NSError(domain: "EasyTier.LogExport", code: 1, userInfo: [NSLocalizedDescriptionKey: "System log export requires iOS 15; use the core log view on iOS 14."])
+        }
         let store = try OSLogStore(scope: .currentProcessIdentifier)
         let startPosition = store.position(timeIntervalSinceLatestBoot: 0)
         let entries = try store.getEntries(at: startPosition)
@@ -44,6 +47,7 @@ enum OSLogExporter {
         return url
     }
 
+    @available(iOS 15, *)
     private static func format(_ log: OSLogEntryLog) -> String {
         let timestamp = dateFormatter.string(from: log.date)
         let level = formatLevel(log.level)
@@ -52,6 +56,7 @@ enum OSLogExporter {
         return "[\(timestamp)] [\(level)] [\(subsystem)] [\(category)] \(log.composedMessage)"
     }
 
+    @available(iOS 15, *)
     private static func format(_ signpost: OSLogEntrySignpost) -> String {
         let timestamp = dateFormatter.string(from: signpost.date)
         let type = String(describing: signpost.signpostType).uppercased()
@@ -61,6 +66,7 @@ enum OSLogExporter {
         return "[\(timestamp)] [SIGNPOST \(type)] [\(subsystem)] [\(category)] \(name)"
     }
 
+    @available(iOS 15, *)
     private static func formatLevel(_ level: OSLogEntryLog.Level) -> String {
         switch level {
         case .debug:

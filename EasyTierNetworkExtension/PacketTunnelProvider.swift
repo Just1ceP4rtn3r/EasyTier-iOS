@@ -496,6 +496,7 @@ class PacketTunnelProvider: NEPacketTunnelProvider {
     }
 
     override func startTunnel(options: [String : NSObject]?, completionHandler: @escaping (Error?) -> Void) {
+        configureCompatibilityMemoryLimit()
         logger.warning("startTunnel(): triggered")
         let completion = OneShotErrorCompletion(completionHandler)
         settingsQueue.async {

@@ -48,13 +48,13 @@ struct ListEditor<Element, RowContent>: View where Element: Identifiable, RowCon
             ForEach($items) { $item in
                 if let rowActionTitle, let rowAction {
                     rowContent($item)
-                        .swipeActions(edge: .leading, allowsFullSwipe: false) {
+                        .contextMenu {
                             Button {
                                 rowAction($item)
                             } label: {
                                 Label(rowActionTitle, systemImage: rowActionSystemImage)
                             }
-                            .tint(rowActionTint)
+                            .foregroundColor(rowActionTint)
                         }
                 } else {
                     rowContent($item)
@@ -85,13 +85,13 @@ struct ListEditor<Element, RowContent>: View where Element: Identifiable, RowCon
                                 Label(rowActionTitle, systemImage: rowActionSystemImage)
                             }
                         }
-                        Button(role: .destructive) {
+                        Button {
                             if let index = items.firstIndex(where: { $item.wrappedValue.id == $0.id }) {
                                 deleteItem(at: .init(integer: index))
                             }
                         } label: {
                             Label("delete", systemImage: "trash")
-                                .tint(.red)
+                                .accentColor(.red)
                         }
                     }
             }
@@ -104,7 +104,7 @@ struct ListEditor<Element, RowContent>: View where Element: Identifiable, RowCon
                 }
             }
             .buttonStyle(.borderless)
-            .tint(.accentColor)
+            .accentColor(.accentColor)
         }
 #endif
     }

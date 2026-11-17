@@ -36,24 +36,10 @@ extension View {
     func adaptiveNavigationDestination<Enum: Identifiable & Hashable, Destination: View>(
         item: Binding<Enum?>,
         @ViewBuilder destination: @escaping () -> Destination
-    ) -> some View {
-        if #available(iOS 17.0, macOS 14.0, *) {
-            return self.navigationDestination(item: item) { _ in
-                destination()
-            }
-        } else {
-            return self.navigationDestination(
-                isPresented: Binding(
-                    get: { item.wrappedValue != nil },
-                    set: { isPresented in
-                        if !isPresented {
-                            item.wrappedValue = nil
-                        }
-                    }
-                )
-            ) {
-                destination()
-            }
-        }
+    ) -> AnyView {
+        let presented = Binding(get: { item.wrappedValue != nil }, set: { if !$0 { item.wrappedValue = nil } })
+        if #available(iOS 17, macOS 14, *) { return AnyView(self.navigationDestination(item: item) { _ in destination() }) }
+        if #available(iOS 16, macOS 13, *) { return AnyView(self.navigationDestination(isPresented: presented, destination: destination)) }
+        return AnyView(self.background(NavigationLink(destination: destination(), isActive: presented) { EmptyView() }))
     }
 }

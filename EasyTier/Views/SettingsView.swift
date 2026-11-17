@@ -55,17 +55,17 @@ struct SettingsView<Manager: NetworkExtensionManagerProtocol>: View {
     }
 
     var appVersion: String {
-        let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? String(localized: "not_available")
-        let build = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? String(localized: "not_available")
+        let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? NSLocalizedString("not_available", comment: "")
+        let build = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? NSLocalizedString("not_available", comment: "")
         return "\(version) (\(build))"
     }
 
     var body: some View {
-        NavigationStack {
+        CompatNavigationStack {
             AdaptiveNavigation(primaryColumn, secondaryColumn, showNav: $selectedPane)
                 .navigationTitle("settings")
                 .adaptiveNavigationBarTitleInline()
-                .scrollDismissesKeyboard(.immediately)
+                .compatDismissKeyboard()
         }
     }
     
@@ -79,13 +79,13 @@ struct SettingsView<Manager: NetworkExtensionManagerProtocol>: View {
             Form {
                 settingsContent
             }
-            .formStyle(.grouped)
+
 #endif
         }
-        .alert(item: $settingsErrorMessage) { msg in
+        .compatAlert(item: $settingsErrorMessage) { msg in
             Alert(title: Text("common.error"), message: Text(msg.text))
         }
-        .alert(isPresented: $showResetAlert) {
+        .compatAlert(isPresented: $showResetAlert) {
             Alert(
                 title: Text("reset_to_default"),
                 message: Text("reset_to_default_confirm"),
@@ -104,11 +104,11 @@ struct SettingsView<Manager: NetworkExtensionManagerProtocol>: View {
                 secondaryButton: .cancel(),
             )
         }
-        .alert(item: $profileMigrationConflict) { conflict in
+        .compatAlert(item: $profileMigrationConflict) { conflict in
             Alert(
                 title: Text("profile_storage_conflict_title"),
                 message: Text(
-                    "\(conflict.fileName)\n\n\(String(localized: "profile_storage_conflict_message"))"
+                    "\(conflict.fileName)\n\n\(NSLocalizedString("profile_storage_conflict_message", comment: ""))"
                 ),
                 primaryButton: .destructive(Text("profile_storage_conflict_overwrite")) {
                     resolveProfileMigrationConflict(overwrite: true)
@@ -119,7 +119,7 @@ struct SettingsView<Manager: NetworkExtensionManagerProtocol>: View {
             )
         }
 #if os(iOS)
-        .sheet(isPresented: $isExportPresented) {
+        .compatSheet(isPresented: $isExportPresented) {
             if let url = exportURL {
                 ShareSheet(activityItems: [url])
             }
@@ -140,7 +140,7 @@ struct SettingsView<Manager: NetworkExtensionManagerProtocol>: View {
                     Image(systemName: "network")
                         .resizable()
                         .frame(width: 128, height: 128)
-                        .foregroundStyle(Color.accentColor.opacity(0.2))
+                        .foregroundColor(Color.accentColor.opacity(0.2))
                 }
                 .ignoresSafeArea()
             }
@@ -149,14 +149,13 @@ struct SettingsView<Manager: NetworkExtensionManagerProtocol>: View {
     
     var settingsContent: some View {
         Group {
-            Section("general") {
-                LabeledContent("status_refresh_rate") {
+            Section(header: Text("general")) {
+                CompatLabeledContent("status_refresh_rate") {
                     HStack {
                         TextField(
                             "1.0",
                             value: $statusRefreshInterval,
-                            formatter: NumberFormatter(),
-                            prompt: Text("1.0")
+                            formatter: NumberFormatter()
                         )
                         .labelsHidden()
                         .contentShape(Rectangle())
@@ -185,12 +184,11 @@ struct SettingsView<Manager: NetworkExtensionManagerProtocol>: View {
                     }
                 }
                 .disabled(manager.status != .disconnected)
-                LabeledContent("log_preserved_lines") {
+                CompatLabeledContent("log_preserved_lines") {
                     TextField(
                         "1000",
                         value: $logPreservedLines,
-                        formatter: NumberFormatter(),
-                        prompt: Text("1000")
+                        formatter: NumberFormatter()
                     )
                     .labelsHidden()
                     .contentShape(Rectangle())
@@ -212,13 +210,14 @@ struct SettingsView<Manager: NetworkExtensionManagerProtocol>: View {
                 }
 #if os(macOS)
                 .buttonStyle(.borderless)
-                .tint(.accentColor)
+                .accentColor(.accentColor)
 #endif
-                .disabled(isExporting || manager.status == .disconnected)
+                .disabled(isExporting || manager.status == .disconnected || !canExportSystemLogs)
             } header: {
                 Text("logging")
             } footer: {
                 Text("logging_help")
+                if !canExportSystemLogs { Text("iOS 14: use the core log view; system log export requires iOS 15.") }
             }
             
             Section {
@@ -235,26 +234,26 @@ struct SettingsView<Manager: NetworkExtensionManagerProtocol>: View {
             }
             .disabled(manager.status != .disconnected)
             
-            Button("reset_to_default", role: .destructive) {
+            Button("reset_to_default") {
                 showResetAlert = true
             }
 #if os(macOS)
             .buttonStyle(.borderless)
-            .tint(.red)
+            .accentColor(.red)
 #endif
 
-            Section("about.title") {
-                LabeledContent("app") {
+            Section(header: Text("about.title")) {
+                CompatLabeledContent("app") {
                     Text("EasyTier")
                 }
-                LabeledContent("version") {
+                CompatLabeledContent("version") {
                     Text(appVersion)
                 }
                 Link("about.homepage", destination: URL(string: "https://github.com/EasyTier/EasyTier-iOS")!)
                 Link("about.privacy_policy", destination: URL(string: "https://easytier.cn/guide/privacy.html")!)
                 
 #if os(iOS)
-                NavigationLink("about.license", value: SettingsPane.license)
+                NavigationLink("about.license") { openSourceLicenseView }
 #else
                 NavigationLink("about.license") {
                     openSourceLicenseView
@@ -266,7 +265,7 @@ struct SettingsView<Manager: NetworkExtensionManagerProtocol>: View {
     
     var openSourceLicenseView: some View {
         List {
-            Section("EasyTier-iOS") {
+            Section(header: Text("EasyTier-iOS")) {
                 Text("""
             Copyright (C) 2026  Chenx Dust and Yin Mo
             
@@ -276,9 +275,9 @@ struct SettingsView<Manager: NetworkExtensionManagerProtocol>: View {
             
             You should have received a copy of the GNU General Public License along with this program. If not, see <http://www.gnu.org/licenses/>.
             """)
-                .font(.caption.monospaced())
+                .font(.system(.caption, design: .monospaced))
             }
-            Section("EasyTier") {
+            Section(header: Text("EasyTier")) {
                 Text("""
             GNU LESSER GENERAL PUBLIC LICENSE
 
@@ -345,9 +344,9 @@ struct SettingsView<Manager: NetworkExtensionManagerProtocol>: View {
 
             If the Library as you received it specifies that a proxy can decide whether future versions of the GNU Lesser General Public License shall apply, that proxy's public statement of acceptance of any version is permanent authorization for you to choose that version for the Library.
             """)
-                .font(.caption.monospaced())
+                .font(.system(.caption, design: .monospaced))
             }
-            Section("TOMLKit") {
+            Section(header: Text("TOMLKit")) {
                 Text("""
             MIT License
 
@@ -359,10 +358,15 @@ struct SettingsView<Manager: NetworkExtensionManagerProtocol>: View {
 
             THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
             """)
-                .font(.caption.monospaced())
+                .font(.system(.caption, design: .monospaced))
             }
         }
         .navigationTitle("about.license")
+    }
+
+    private var canExportSystemLogs: Bool {
+        if #available(iOS 15, *) { return true }
+        return false
     }
 
     private func exportOSLog() {
@@ -385,7 +389,7 @@ struct SettingsView<Manager: NetworkExtensionManagerProtocol>: View {
                 }
             } catch {
                 await MainActor.run {
-                    settingsErrorMessage = .init(String(localized: "export_failed"))
+                    settingsErrorMessage = .init(NSLocalizedString("export_failed", comment: ""))
                 }
             }
             await MainActor.run {
@@ -531,7 +535,7 @@ struct SettingsView<Manager: NetworkExtensionManagerProtocol>: View {
             } catch {
                 await MainActor.run {
                     manager.isAlwaysOnEnabled = !enabled
-                    settingsErrorMessage = .init(String(localized: "always_on_failed"))
+                    settingsErrorMessage = .init(NSLocalizedString("always_on_failed", comment: ""))
                 }
             }
             await MainActor.run {

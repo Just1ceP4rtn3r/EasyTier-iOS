@@ -43,36 +43,36 @@ struct MenuBarView<Manager: NetworkExtensionManagerProtocol>: View {
 
     private var statusText: String {
         if manager.isLoading {
-            return String(localized: "menubar.status.loading")
+            return NSLocalizedString("menubar.status.loading", comment: "")
         }
 
         switch manager.status {
         case .invalid:
-            return String(localized: "menubar.status.not_configured")
+            return NSLocalizedString("menubar.status.not_configured", comment: "")
         case .disconnected:
-            return String(localized: "menubar.status.disconnected")
+            return NSLocalizedString("menubar.status.disconnected", comment: "")
         case .connecting:
-            return String(localized: "menubar.status.connecting")
+            return NSLocalizedString("menubar.status.connecting", comment: "")
         case .connected:
-            return String(localized: "menubar.status.connected")
+            return NSLocalizedString("menubar.status.connected", comment: "")
         case .reasserting:
-            return String(localized: "menubar.status.reconnecting")
+            return NSLocalizedString("menubar.status.reconnecting", comment: "")
         case .disconnecting:
-            return String(localized: "menubar.status.disconnecting")
+            return NSLocalizedString("menubar.status.disconnecting", comment: "")
         @unknown default:
-            return String(localized: "menubar.status.unknown")
+            return NSLocalizedString("menubar.status.unknown", comment: "")
         }
     }
 
     private var networkName: String {
         if connectionMode == EasyTierConnectionMode.web.rawValue {
-            return webStatus?.networkName ?? webStatus?.instanceName ?? String(localized: "web_management.title")
+            return webStatus?.networkName ?? webStatus?.instanceName ?? NSLocalizedString("web_management.title", comment: "")
         }
         return selectedProfileName ?? "EasyTier"
     }
 
     private var virtualIPv4: String {
-        status?.myNodeInfo?.virtualIPv4?.description ?? String(localized: "not_available")
+        status?.myNodeInfo?.virtualIPv4?.description ?? NSLocalizedString("not_available", comment: "")
     }
 
     private var peerCount: String {
@@ -92,7 +92,7 @@ struct MenuBarView<Manager: NetworkExtensionManagerProtocol>: View {
             actionPanel
         }
         .frame(width: 340)
-        .task {
+        .compatTask {
             if manager.isLoading {
                 try? await manager.load()
             }
@@ -125,7 +125,7 @@ struct MenuBarView<Manager: NetworkExtensionManagerProtocol>: View {
                             .frame(width: 7, height: 7)
                         Text(statusText)
                             .font(.subheadline)
-                            .foregroundStyle(.secondary)
+                            .foregroundColor(.secondary)
                     }
                 }
 
@@ -146,12 +146,12 @@ struct MenuBarView<Manager: NetworkExtensionManagerProtocol>: View {
 
                 HStack(spacing: 12) {
                     compactStat(
-                        title: String(localized: "virtual_ipv4"),
+                        title: NSLocalizedString("virtual_ipv4", comment: ""),
                         value: virtualIPv4,
                         systemImage: "network"
                     )
                     compactStat(
-                        title: String(localized: "peer_info"),
+                        title: NSLocalizedString("peer_info", comment: ""),
                         value: peerCount,
                         systemImage: "person.2"
                     )
@@ -172,8 +172,8 @@ struct MenuBarView<Manager: NetworkExtensionManagerProtocol>: View {
                 )
                 .frame(maxWidth: .infinity)
             }
-            .buttonStyle(.borderedProminent)
-            .tint(isConnected ? .red : .accentColor)
+            .buttonStyle(CompatButtonStyle())
+            .accentColor(isConnected ? .red : .accentColor)
             .disabled(manager.isLoading || isPending)
 
             Button {
@@ -181,8 +181,8 @@ struct MenuBarView<Manager: NetworkExtensionManagerProtocol>: View {
             } label: {
                 Image(systemName: "macwindow")
             }
-            .buttonStyle(.bordered)
-            .help(String(localized: "menubar.open"))
+            .buttonStyle(CompatButtonStyle())
+            .help(NSLocalizedString("menubar.open", comment: ""))
             .keyboardShortcut("o")
 
             Button {
@@ -190,8 +190,8 @@ struct MenuBarView<Manager: NetworkExtensionManagerProtocol>: View {
             } label: {
                 Image(systemName: "power")
             }
-            .buttonStyle(.bordered)
-            .help(String(localized: "menubar.quit"))
+            .buttonStyle(CompatButtonStyle())
+            .help(NSLocalizedString("menubar.quit", comment: ""))
             .keyboardShortcut("q")
         }
         .padding(12)
@@ -201,11 +201,11 @@ struct MenuBarView<Manager: NetworkExtensionManagerProtocol>: View {
         VStack(alignment: .leading, spacing: 5) {
             Label(title, systemImage: systemImage)
                 .font(.caption)
-                .foregroundStyle(.secondary)
+                .foregroundColor(.secondary)
             Text(value)
                 .font(.subheadline.weight(.medium))
                 .lineLimit(1)
-                .textSelection(.enabled)
+                .compatTextSelection()
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(10)
@@ -215,7 +215,7 @@ struct MenuBarView<Manager: NetworkExtensionManagerProtocol>: View {
     private func errorPanel(_ message: String) -> some View {
         Label(message, systemImage: "exclamationmark.triangle.fill")
             .font(.caption)
-            .foregroundStyle(.red)
+            .foregroundColor(.red)
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(12)
     }
@@ -280,7 +280,7 @@ struct MenuBarView<Manager: NetworkExtensionManagerProtocol>: View {
     private func refreshStatusLoop() async {
         while !Task.isCancelled {
             refreshStatus()
-            try? await Task.sleep(for: .seconds(1))
+            try? await Task.sleep(nanoseconds: 1_000_000_000)
         }
     }
 }

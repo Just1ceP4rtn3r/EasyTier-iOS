@@ -32,13 +32,13 @@ private struct EditModeAwareConfirmationButton: View {
             Button(action: action) {
                 Image(systemName: "checkmark")
             }
-            .buttonStyle(.borderedProminent)
+            .buttonStyle(CompatButtonStyle())
         }
 #else
         Button(action: action) {
             Image(systemName: "checkmark")
         }
-        .buttonStyle(.borderedProminent)
+        .buttonStyle(CompatButtonStyle())
 #endif
     }
 }
@@ -56,7 +56,7 @@ private struct ProfileTextEditor: View {
     }
 
     var body: some View {
-        NavigationStack {
+        CompatNavigationStack {
             VStack(spacing: 0) {
                 TextEditor(text: $text)
                     .font(.system(.body, design: .monospaced))
@@ -72,7 +72,7 @@ private struct ProfileTextEditor: View {
                     Button("save") {
                         onSave(text)
                     }
-                    .buttonStyle(.borderedProminent)
+                    .buttonStyle(CompatButtonStyle())
                 }
             }
         }
@@ -185,7 +185,7 @@ struct DashboardView<Manager: NetworkExtensionManagerProtocol>: View {
                     Image(systemName: "network.slash")
                         .resizable()
                         .frame(width: 64, height: 64)
-                        .foregroundStyle(Color.accentColor)
+                        .foregroundColor(Color.accentColor)
                     Text("no_network_selected")
                     Spacer()
                 }
@@ -200,20 +200,20 @@ struct DashboardView<Manager: NetworkExtensionManagerProtocol>: View {
     @ViewBuilder
     var webManagementView: some View {
         if isConnected, webStatus?.status == .running {
-            StatusView(webStatus?.networkName ?? webStatus?.instanceName ?? String(localized: "web_management.title"), manager: manager)
+            StatusView(webStatus?.networkName ?? webStatus?.instanceName ?? NSLocalizedString("web_management.title", comment: ""), manager: manager)
         } else if isConnected {
             Form {
-                Section("web_management.title") {
-                    LabeledContent("web_management.status.label", value: webStatusLabel)
+                Section(header: Text("web_management.title")) {
+                    CompatLabeledContent("web_management.status.label", value: webStatusLabel)
                     if let instanceName = webStatus?.instanceName, !instanceName.isEmpty {
-                        LabeledContent("web_management.instance", value: instanceName)
+                        CompatLabeledContent("web_management.instance", value: instanceName)
                     }
                     if let error = webStatus?.error, !error.isEmpty {
-                        Text(error).foregroundStyle(.red)
+                        Text(error).foregroundColor(.red)
                     }
                 }
             }
-            .formStyle(.grouped)
+
         } else {
             WebManagementEditView(
                 server: $webServer,
@@ -228,12 +228,12 @@ struct DashboardView<Manager: NetworkExtensionManagerProtocol>: View {
 
     var webStatusLabel: String {
         switch webStatus?.status {
-        case .connectingServer: return String(localized: "web_management.status.connecting_server")
-        case .idle, .waitingConfig: return String(localized: "web_management.status.waiting_config")
-        case .starting: return String(localized: "menubar.status.connecting")
-        case .running: return String(localized: "running")
-        case .error: return String(localized: "common.error")
-        case nil: return String(localized: "web_management.status.connecting_server")
+        case .connectingServer: return NSLocalizedString("web_management.status.connecting_server", comment: "")
+        case .idle, .waitingConfig: return NSLocalizedString("web_management.status.waiting_config", comment: "")
+        case .starting: return NSLocalizedString("menubar.status.connecting", comment: "")
+        case .running: return NSLocalizedString("running", comment: "")
+        case .error: return NSLocalizedString("common.error", comment: "")
+        case nil: return NSLocalizedString("web_management.status.connecting_server", comment: "")
         }
     }
 
@@ -283,7 +283,7 @@ struct DashboardView<Manager: NetworkExtensionManagerProtocol>: View {
     }
 
     func createProfile() {
-        let baseName = newNetworkInput.isEmpty ? String(localized: "new_network") : newNetworkInput
+        let baseName = newNetworkInput.isEmpty ? NSLocalizedString("new_network", comment: "") : newNetworkInput
         guard let sanitizedName = availableConfigName(baseName) else { return }
         let profile = NetworkProfile()
         Task { @MainActor in
@@ -298,9 +298,9 @@ struct DashboardView<Manager: NetworkExtensionManagerProtocol>: View {
     }
 
     var manageSheet: some View {
-        NavigationStack {
+        CompatNavigationStack {
             Form {
-                Section("web_management.connection_mode") {
+                Section(header: Text("web_management.connection_mode")) {
                     Picker("web_management.connection_mode", selection: connectionModeBinding) {
                         Text("web_management.mode.local").tag(EasyTierConnectionMode.local)
                         Text("web_management.title").tag(EasyTierConnectionMode.web)
@@ -308,7 +308,7 @@ struct DashboardView<Manager: NetworkExtensionManagerProtocol>: View {
                     .pickerStyle(.segmented)
                     .disabled(isPending || isConnected)
                 }
-                Section("network") {
+                Section(header: Text("network")) {
                     let profiles = ProfileStore.loadIndexOrEmpty().map{ IdenticalTextItem($0) }
                     ForEach(profiles) { item in
                         HStack {
@@ -340,7 +340,7 @@ struct DashboardView<Manager: NetworkExtensionManagerProtocol>: View {
                             } label: {
                                 Label("rename", systemImage: "pencil")
                             }
-                            Button(role: .destructive) {
+                            Button {
                                 Task { @MainActor in
                                     do {
                                         if selectedSession.session?.name == item.id {
@@ -354,19 +354,10 @@ struct DashboardView<Manager: NetworkExtensionManagerProtocol>: View {
                                 }
                             } label: {
                                 Label("delete", systemImage: "trash")
-                                    .tint(.red)
+                                    .accentColor(.red)
                             }
                         }
-                        .swipeActions(edge: .leading) {
-                            Button {
-                                editingProfileName = item.id
-                                editConfigNameInput = item.id
-                                showEditConfigNameAlert = true
-                            } label: {
-                                Label("rename", systemImage: "pencil")
-                            }
-                            .tint(.orange)
-                        }
+
                     }
                     .onDelete { indexSet in
                         withAnimation {
@@ -386,7 +377,7 @@ struct DashboardView<Manager: NetworkExtensionManagerProtocol>: View {
                         }
                     }
                 }
-                Section("device.management") {
+                Section(header: Text("device.management")) {
                     Button {
                         showNewNetworkAlert = true
                     } label: {
@@ -401,7 +392,7 @@ struct DashboardView<Manager: NetworkExtensionManagerProtocol>: View {
                     }
 #if os(macOS)
                     .buttonStyle(.borderless)
-                    .tint(.accentColor)
+                    .accentColor(.accentColor)
 #endif
                     Button {
                         presentEditInText()
@@ -417,7 +408,7 @@ struct DashboardView<Manager: NetworkExtensionManagerProtocol>: View {
                     }
 #if os(macOS)
                     .buttonStyle(.borderless)
-                    .tint(.accentColor)
+                    .accentColor(.accentColor)
 #endif
                     Button {
                         showImportPicker = true
@@ -433,7 +424,7 @@ struct DashboardView<Manager: NetworkExtensionManagerProtocol>: View {
                     }
 #if os(macOS)
                     .buttonStyle(.borderless)
-                    .tint(.accentColor)
+                    .accentColor(.accentColor)
 #endif
                     Button {
                         exportSelectedProfile()
@@ -445,11 +436,11 @@ struct DashboardView<Manager: NetworkExtensionManagerProtocol>: View {
                     }
 #if os(macOS)
                     .buttonStyle(.borderless)
-                    .tint(.accentColor)
+                    .accentColor(.accentColor)
 #endif
                 }
             }
-            .formStyle(.grouped)
+
             .navigationTitle("device.management")
             .adaptiveNavigationBarTitleInline()
             .toolbar {
@@ -463,37 +454,18 @@ struct DashboardView<Manager: NetworkExtensionManagerProtocol>: View {
                 isVisible: !ProfileStore.loadIndexOrEmpty().isEmpty,
                 placement: .cancellationAction
             )
-            .alert("add_new_network", isPresented: $showNewNetworkAlert) {
-                TextField("config_name", text: $newNetworkInput)
-                    .adaptiveNoTextInputAutocapitalization()
-                if #available(iOS 26.0, macOS 26.0, *) {
-                    Button(role: .cancel) {}
-                    Button("network.create", role: .confirm, action: createProfile)
-                } else {
-                    Button("common.cancel") {}
-                    Button("network.create", action: createProfile)
-                }
-            }
-            .alert("edit_config_name", isPresented: $showEditConfigNameAlert) {
-                TextField("config_name", text: $editConfigNameInput)
-                    .adaptiveNoTextInputAutocapitalization()
-                Button("common.cancel") {}
-                Button("save") {
-                    commitConfigNameEdit()
-                }
-            }
+            .compatTextPrompt("add_new_network", isPresented: $showNewNetworkAlert, text: $newNetworkInput, confirm: "network.create", action: createProfile)
+            .compatTextPrompt("edit_config_name", isPresented: $showEditConfigNameAlert, text: $editConfigNameInput, confirm: "save", action: commitConfigNameEdit)
         }
     }
 
     var body: some View {
-        NavigationStack {
+        CompatNavigationStack {
             mainView
-                .navigationTitle(connectionMode == .web ? String(localized: "web_management.title") : (selectedSession.session?.name ?? String(localized: "select_network")))
+                .navigationTitle(connectionMode == .web ? NSLocalizedString("web_management.title", comment: "") : (selectedSession.session?.name ?? NSLocalizedString("select_network", comment: "")))
             .toolbar {
                 ToolbarItem(placement: ToolbarLeading) {
-                    Button("select_network", systemImage: "chevron.up.chevron.down") {
-                        showManageSheet = true
-                    }
+                    Button { showManageSheet = true } label: { Label("select_network", systemImage: "chevron.up.chevron.down") }
                     .disabled(isPending || isConnected)
                 }
                 ToolbarItem(placement: ToolbarTrailing) {
@@ -527,15 +499,15 @@ struct DashboardView<Manager: NetworkExtensionManagerProtocol>: View {
                             isConnected ? "vpn_disconnect" : "vpn_connect",
                             systemImage: isConnected ? "cable.connector.slash" : "cable.connector"
                         )
-                        .labelStyle(.titleAndIcon)
+                        .labelStyle(CompatTitleIconStyle())
                         .padding(10)
                     }
                     .disabled((connectionMode == .local && !hasSelectedProfile && !isConnected) || (connectionMode == .web && webServer.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && !isConnected) || manager.isLoading || isPending)
 #if os(iOS)
                     .buttonStyle(.plain)
 #endif
-                    .foregroundStyle(isConnected ? Color.red : Color.accentColor)
-                    .animation(.interactiveSpring, value: [isConnected, isPending])
+                    .foregroundColor(isConnected ? Color.red : Color.accentColor)
+                    .animation(.interactiveSpring(), value: [isConnected, isPending])
                 }
             }
         }
@@ -562,7 +534,7 @@ struct DashboardView<Manager: NetworkExtensionManagerProtocol>: View {
             webStatusTask = Task { @MainActor in
                 while !Task.isCancelled {
                     refreshWebStatus()
-                    try? await Task.sleep(for: .seconds(2))
+                    try? await Task.sleep(nanoseconds: 2_000_000_000)
                 }
             }
         }
@@ -582,7 +554,7 @@ struct DashboardView<Manager: NetworkExtensionManagerProtocol>: View {
             // External changes (e.g. Shortcuts) already saved their own options.
             refreshWebStatus()
         }
-        .task(id: lastSelected) {
+        .compatTask(id: lastSelected) {
             await synchronizeSelectedProfile()
         }
         .onChange(of: selectedSession.session) { session in
@@ -616,9 +588,9 @@ struct DashboardView<Manager: NetworkExtensionManagerProtocol>: View {
                 handleConflict(configName: configName ?? selectedSession.session?.name)
             }
         }
-        .sheet(isPresented: $showManageSheet) {
+        .compatSheet(isPresented: $showManageSheet) {
             manageSheet
-                .sheet(item: $editDraft) { draft in
+                .compatSheet(item: $editDraft) { draft in
                     ProfileTextEditor(text: draft.text) {
                         editDraft = nil
                     } onSave: { text in
@@ -626,7 +598,7 @@ struct DashboardView<Manager: NetworkExtensionManagerProtocol>: View {
                     }
                 }
 #if os(iOS)
-                .sheet(item: $exportURL) { url in
+                .compatSheet(item: $exportURL) { url in
                     ShareSheet(activityItems: [url.url])
                 }
 #endif
@@ -647,30 +619,28 @@ struct DashboardView<Manager: NetworkExtensionManagerProtocol>: View {
                         errorMessage = .init(error.localizedDescription)
                     }
                 }
-                .alert(item: $errorMessage) { msg in
+                .compatAlert(item: $errorMessage) { msg in
                     dashboardLogger.error("received error: \(String(describing: msg))")
                     return Alert(title: Text("common.error"), message: Text(msg.text))
                 }
         }
-        .alert(item: $errorMessage) { msg in
+        .compatAlert(item: $errorMessage) { msg in
             dashboardLogger.error("received error: \(String(describing: msg))")
             return Alert(title: Text("common.error"), message: Text(msg.text))
         }
-        .alert("icloud_conflict_title", isPresented: $showConflictAlert) {
-            Button("icloud_conflict_use_local") {
-                resolveConflict(useLocal: true)
-            }
-            Button("icloud_conflict_use_remote") {
-                resolveConflict(useLocal: false)
-            }
-            Button("common.cancel", role: .cancel) {}
-        } message: {
-            if conflictDetails.isEmpty {
-                Text("icloud_conflict_message")
-            } else {
-                Text(conflictDetails)
-            }
+        #if os(iOS)
+        .actionSheet(isPresented: $showConflictAlert) {
+            ActionSheet(title: Text("icloud_conflict_title"), message: conflictDetails.isEmpty ? Text("icloud_conflict_message") : Text(conflictDetails), buttons: [
+                .default(Text("icloud_conflict_use_local")) { resolveConflict(useLocal: true) },
+                .default(Text("icloud_conflict_use_remote")) { resolveConflict(useLocal: false) }, .cancel()])
         }
+        #else
+        .alert("icloud_conflict_title", isPresented: $showConflictAlert) {
+            Button("icloud_conflict_use_local") { resolveConflict(useLocal: true) }
+            Button("icloud_conflict_use_remote") { resolveConflict(useLocal: false) }
+            Button("common.cancel", role: .cancel) {}
+        } message: { Text(conflictDetails) }
+        #endif
     }
     
     private func importConfig(from url: URL) {
@@ -698,7 +668,7 @@ struct DashboardView<Manager: NetworkExtensionManagerProtocol>: View {
 
     private func exportSelectedProfile() {
         guard let session = selectedSession.session else {
-            errorMessage = .init(String(localized: "no_network_selected"))
+            errorMessage = .init(NSLocalizedString("no_network_selected", comment: ""))
             return
         }
         let fileURL = try? ProfileStore.fileURL(forConfigName: session.name)
@@ -722,7 +692,7 @@ struct DashboardView<Manager: NetworkExtensionManagerProtocol>: View {
     private func presentEditInText() {
         Task { @MainActor in
             guard hasSelectedProfile else {
-                errorMessage = .init(String(localized: "no_network_selected"))
+                errorMessage = .init(NSLocalizedString("no_network_selected", comment: ""))
                 return
             }
             do {
@@ -871,22 +841,22 @@ struct DashboardView<Manager: NetworkExtensionManagerProtocol>: View {
 
     private func conflictDetailsText(for configName: String) -> String {
         guard let url = try? ProfileStore.fileURL(forConfigName: configName) else {
-            return String(localized: "icloud_conflict_message")
+            return NSLocalizedString("icloud_conflict_message", comment: "")
         }
         let infos = ProfileStore.conflictInfos(at: url)
         guard !infos.isEmpty else {
-            return String(localized: "icloud_conflict_message")
+            return NSLocalizedString("icloud_conflict_message", comment: "")
         }
         let formatter = DateFormatter()
         formatter.dateStyle = .medium
         formatter.timeStyle = .short
         let lines = infos.map { info in
-            let label = info.local ? String(localized: "local") : String(localized: "icloud")
+            let label = info.local ? NSLocalizedString("local", comment: "") : NSLocalizedString("icloud", comment: "")
             let time = info.modificationDate.map { formatter.string(from: $0) } ?? "-"
             let device = info.deviceName ?? "N/A"
             return "\(label): \(device) · \(time)"
         }
-        return ([String(localized: "icloud_conflict_message")] + lines).joined(separator: "\n")
+        return ([NSLocalizedString("icloud_conflict_message", comment: "")] + lines).joined(separator: "\n")
     }
 
     @MainActor

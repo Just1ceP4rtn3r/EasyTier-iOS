@@ -21,7 +21,7 @@ struct LogView<Manager: NetworkExtensionManagerProtocol>: View {
     @State private var exportErrorMessage: TextItem?
     
     var body: some View {
-        NavigationStack {
+        CompatNavigationStack {
             VStack(alignment: .leading) {
                 // Log Content
                 ScrollView {
@@ -30,7 +30,7 @@ struct LogView<Manager: NetworkExtensionManagerProtocol>: View {
                             ForEach(tailer.logContent) { line in
                                 Text(line.text)
                                     .font(.system(.footnote, design: .monospaced))
-                                    .textSelection(.enabled)
+                                    .compatTextSelection()
                             }
                             Text("").id(bottomID)
                         }
@@ -57,7 +57,7 @@ struct LogView<Manager: NetworkExtensionManagerProtocol>: View {
                         }
                     }) {
                         Image(systemName: "trash")
-                    }.tint(.red)
+                    }.accentColor(.red)
                 }
                 ToolbarItem(placement: ToolbarTrailing) {
                     Button(action: {
@@ -102,14 +102,14 @@ struct LogView<Manager: NetworkExtensionManagerProtocol>: View {
                 break
             }
         }
-        .alert(item: $tailer.errorMessage) { msg in
+        .compatAlert(item: $tailer.errorMessage) { msg in
             Alert(title: Text("common.error"), message: Text(msg.text))
         }
-        .alert(item: $exportErrorMessage) { msg in
+        .compatAlert(item: $exportErrorMessage) { msg in
             Alert(title: Text("common.error"), message: Text(msg.text))
         }
 #if os(iOS)
-        .sheet(isPresented: $isExportPresented) {
+        .compatSheet(isPresented: $isExportPresented) {
             if let url = exportURL {
                 ShareSheet(activityItems: [url])
             }
