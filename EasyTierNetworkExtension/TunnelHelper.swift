@@ -175,7 +175,7 @@ func configureCompatibilityMemoryLimit() {
     typealias MemoryControl = @convention(c) (UInt32, Int32, UInt32, UnsafeMutableRawPointer?, Int) -> Int32
     guard let symbol = dlsym(UnsafeMutableRawPointer(bitPattern: -2), "memorystatus_control") else { return }
     let control = unsafeBitCast(symbol, to: MemoryControl.self)
-    let result = control(6, getpid(), 64, nil, 0)
-    NSLog("EasyTier compatibility memory limit: 64 MiB, result=%d errno=%d", result, result == 0 ? 0 : errno)
+    let result = control(6, getpid(), 128, nil, 0)
+    NSLog("EasyTier compatibility memory limit: 128 MiB, result=%d errno=%d", result, result == 0 ? 0 : errno)
 #endif
 }
